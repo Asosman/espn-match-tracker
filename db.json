@@ -62,12 +62,13 @@
       "lineupsPosted": true,
       "lineupPostId": null,
       "lastScore": {
-        "home": 0,
+        "home": 1,
         "away": 4
       },
       "postedEvents": [
         "401912659:GOAL:51:0-3:wu lei",
-        "401912659:GOAL:51:0-4:wu lei"
+        "401912659:GOAL:51:0-4:wu lei",
+        "401912659:GOAL:71:1-4:njiva rakotoharimalala"
       ],
       "goalPosts": {
         "51:0-3": {
@@ -79,13 +80,18 @@
           "postId": "live-sim-post-1789470783221-873",
           "scorer": "Wu Lei",
           "assist": "Xin Yue"
+        },
+        "71:1-4": {
+          "postId": "232327123298533_122347537856204158",
+          "scorer": "Njiva Rakotoharimalala",
+          "assist": "Chotipat Poomkeaw"
         }
       },
       "injuryEvents": [],
       "lastStatus": "in",
       "lastPeriod": 2,
-      "lastClock": "55'",
-      "lastUpdated": "2026-09-15T11:15:42.774Z"
+      "lastClock": "84'",
+      "lastUpdated": "2026-09-15T11:45:08.604Z"
     },
     "401912660": {
       "fixtureId": "401912660",
@@ -96,24 +102,42 @@
       "lineupsPosted": true,
       "lineupPostId": null,
       "lastScore": {
-        "home": 6,
-        "away": 0
+        "home": 7,
+        "away": 1
       },
       "postedEvents": [
-        "401912660:GOAL:56:6-0:homare tokuda"
+        "401912660:GOAL:56:6-0:homare tokuda",
+        "401912660:GOAL:73:6-0:kyosuke tagawa",
+        "401912660:GOAL:73:7-0:kyosuke tagawa",
+        "401912660:GOAL:79:7-1:patrick wood"
       ],
       "goalPosts": {
         "56:6-0": {
           "postId": "live-sim-post-1789470942502-619",
           "scorer": "Homare Tokuda",
           "assist": null
+        },
+        "73:6-0": {
+          "postId": "232327123298533_122347537748204158",
+          "scorer": "Kyosuke Tagawa",
+          "assist": "Haruki Hayashi"
+        },
+        "73:7-0": {
+          "postId": "232327123298533_122347537850204158",
+          "scorer": "Kyosuke Tagawa",
+          "assist": "Haruki Hayashi"
+        },
+        "79:7-1": {
+          "postId": "232327123298533_122347538678204158",
+          "scorer": "Patrick Wood",
+          "assist": "Joe Lolley"
         }
       },
       "injuryEvents": [],
       "lastStatus": "in",
       "lastPeriod": 2,
-      "lastClock": "57'",
-      "lastUpdated": "2026-09-15T11:15:42.504Z"
+      "lastClock": "85'",
+      "lastUpdated": "2026-09-15T11:45:08.345Z"
     },
     "401912671": {
       "fixtureId": "401912671",
@@ -124,16 +148,24 @@
       "lineupsPosted": true,
       "lineupPostId": null,
       "lastScore": {
-        "home": 1,
-        "away": 0
+        "home": 3,
+        "away": 1
       },
-      "postedEvents": [],
-      "goalPosts": {},
+      "postedEvents": [
+        "401912671:GOAL:79:3-1:brayan perea"
+      ],
+      "goalPosts": {
+        "79:3-1": {
+          "postId": "232327123298533_122347538390204158",
+          "scorer": "Brayan Perea",
+          "assist": null
+        }
+      },
       "injuryEvents": [],
       "lastStatus": "in",
       "lastPeriod": 2,
-      "lastClock": "57'",
-      "lastUpdated": "2026-09-15T11:15:42.240Z"
+      "lastClock": "87'",
+      "lastUpdated": "2026-09-15T11:45:08.109Z"
     },
     "401912672": {
       "fixtureId": "401912672",
