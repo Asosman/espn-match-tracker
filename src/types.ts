@@ -99,6 +99,7 @@ export interface MatchEventSummary {
   shortName: string;
   sport: string;
   league: string;
+  resolvedLeagueSlug?: string;
   details?: MatchDetailEvent[];
   commentary?: any[];
   status: {

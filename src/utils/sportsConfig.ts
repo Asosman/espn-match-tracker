@@ -145,6 +145,22 @@ export const SUPPORTED_LEAGUES: LeagueInfo[] = [
     category: 'Middle East',
     icon: 'Award',
   },
+  {
+    id: 'soccer-afc-champions-east',
+    name: 'AFC Champions League Elite East',
+    sport: 'soccer',
+    slug: 'afc.champions.east',
+    category: 'Asia',
+    icon: 'Trophy',
+  },
+  {
+    id: 'soccer-afc-champions-west',
+    name: 'AFC Champions League Elite West',
+    sport: 'soccer',
+    slug: 'afc.champions.west',
+    category: 'Asia',
+    icon: 'Trophy',
+  },
 ];
 
 export const MONITORED_LEAGUE_SLUGS = [
@@ -165,4 +181,6 @@ export const MONITORED_LEAGUE_SLUGS = [
   'ned.1',
   'por.1',
   'sau.1',
+  'afc.champions.east',
+  'afc.champions.west',
 ];

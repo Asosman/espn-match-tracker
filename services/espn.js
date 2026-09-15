@@ -30,6 +30,8 @@ export const COMPREHENSIVE_LEAGUES = [
   { slug: 'ned.1', name: 'Dutch Eredivisie' },
   { slug: 'por.1', name: 'Portuguese Primeira Liga' },
   { slug: 'sau.1', name: 'Saudi Pro League' },
+  { slug: 'afc.champions.east', name: 'AFC Champions League Elite East' },
+  { slug: 'afc.champions.west', name: 'AFC Champions League Elite West' },
 ];
 
 // Single shared axios instance with configured timeout
@@ -42,6 +44,48 @@ const apiClient = axios.create({
 
 // Cache for athlete details to prevent duplicate requests
 const athleteCache = new Map();
+
+/**
+ * Dynamically determines if an AFC Champions League Elite match is in the East or West region.
+ * @param {string} homeName
+ * @param {string} awayName
+ * @returns {'east' | 'west'}
+ */
+export function getAfcRegion(homeName, awayName) {
+  const westKeywords = [
+    'hilal', 'nassr', 'ahli', 'sadd', 'gharafa', 'rayyan', 'ain', 'wasl', 
+    'pakhtakor', 'persepolis', 'esteghlal', 'shorta', 'saudi', 'qatar', 'uae', 
+    'uzbekistan', 'iran', 'iraq', 'baghdad', 'tehran', 'riyadh', 'dubai', 'doha', 'ahly'
+  ];
+  
+  const eastKeywords = [
+    'kobe', 'kawasaki', 'yokohama', 'hiroshima', 'central coast', 'mariners', 
+    'gwangju', 'daejeon', 'ulsan', 'shanghai', 'shenhua', 'johor', 'buriram', 
+    'kyoto', 'japan', 'korea', 'china', 'australia', 'thailand', 'malaysia', 
+    'singapore', 'sanga', 'citizen', 'marinos', 'frontale', 'vissel', 'port',
+    'sydney', 'melbourne', 'victory', 'adelaide'
+  ];
+
+  const h = (homeName || '').toLowerCase();
+  const a = (awayName || '').toLowerCase();
+
+  // Check West first
+  for (const kw of westKeywords) {
+    if (h.includes(kw) || a.includes(kw)) {
+      return 'west';
+    }
+  }
+
+  // Check East
+  for (const kw of eastKeywords) {
+    if (h.includes(kw) || a.includes(kw)) {
+      return 'east';
+    }
+  }
+
+  // Fallback default
+  return 'east';
+}
 
 /**
  * Normalizes an ESPN competition event into the application's standard NormalizedMatch shape.
@@ -78,7 +122,16 @@ export function normalizeMatch(event, leagueSlugFallback = 'soccer') {
     description = 'Cancelled';
   }
 
-  const leagueSlug = event.league?.slug || comp.league?.slug || leagueSlugFallback;
+  let leagueSlug = event.league?.slug || comp.league?.slug || leagueSlugFallback;
+  
+  // Custom logic to handle AFC Champions League Elite regions
+  if (leagueSlug === 'afc.champions' || leagueSlugFallback?.startsWith('afc.champions')) {
+    const homeName = homeComp.team?.displayName || homeComp.team?.name || '';
+    const awayName = awayComp.team?.displayName || awayComp.team?.name || '';
+    const region = getAfcRegion(homeName, awayName);
+    leagueSlug = `afc.champions.${region}`;
+  }
+
   const leagueDef = COMPREHENSIVE_LEAGUES.find(
     (l) => l.slug === leagueSlug || l.slug === leagueSlugFallback
   );
@@ -159,9 +212,10 @@ export async function resolveAthlete(athleteRefOrId, leagueSlug = 'eng.1') {
     return athleteCache.get(athleteRefOrId);
   }
 
+  const apiSlug = leagueSlug && leagueSlug.startsWith('afc.champions') ? 'afc.champions' : leagueSlug;
   let url = athleteRefOrId;
   if (!athleteRefOrId.startsWith('http')) {
-    url = `${CORE_BASE}/leagues/${leagueSlug}/athletes/${athleteRefOrId}`;
+    url = `${CORE_BASE}/leagues/${apiSlug}/athletes/${athleteRefOrId}`;
   }
 
   try {
@@ -218,7 +272,10 @@ export async function fetchTodaysMatches(targetDateWAT = null) {
       batch.map(async (league) => {
         competitionsChecked++;
         try {
-          const apiSlug = league.slug === 'sau.1' ? 'ksa.1' : league.slug;
+          let apiSlug = league.slug === 'sau.1' ? 'ksa.1' : league.slug;
+          if (apiSlug && apiSlug.startsWith('afc.champions')) {
+            apiSlug = 'afc.champions';
+          }
           const url = `${SITE_BASE}/${apiSlug}/scoreboard?dates=${dateStrForEspn}`;
           const res = await withRetry(() => apiClient.get(url), 1, `ESPN ${league.name} Scoreboard`);
           const events = res.data?.events || [];
@@ -273,7 +330,8 @@ export async function getTodayMatches(targetDateWAT = null) {
  * @returns {Promise<any>}
  */
 export async function getMatchSummary(fixtureId, leagueSlug = 'eng.1') {
-  const url = `${SITE_BASE}/${leagueSlug}/summary?event=${fixtureId}`;
+  const apiSlug = leagueSlug && leagueSlug.startsWith('afc.champions') ? 'afc.champions' : leagueSlug;
+  const url = `${SITE_BASE}/${apiSlug}/summary?event=${fixtureId}`;
   return withRetry(() => apiClient.get(url), config.espn.maxRetries, `MatchSummary(${fixtureId})`)
     .then((res) => res.data)
     .catch((err) => {
@@ -290,7 +348,8 @@ export async function getMatchSummary(fixtureId, leagueSlug = 'eng.1') {
  * @returns {Promise<any[]>}
  */
 export async function getMatchPlays(fixtureId, leagueSlug = 'eng.1') {
-  const url = `${CORE_BASE}/leagues/${leagueSlug}/events/${fixtureId}/competitions/${fixtureId}/plays?limit=300`;
+  const apiSlug = leagueSlug && leagueSlug.startsWith('afc.champions') ? 'afc.champions' : leagueSlug;
+  const url = `${CORE_BASE}/leagues/${apiSlug}/events/${fixtureId}/competitions/${fixtureId}/plays?limit=300`;
   try {
     const res = await withRetry(() => apiClient.get(url), 2, `MatchPlays(${fixtureId})`);
     return res.data?.items || [];
@@ -312,7 +371,8 @@ export async function getMatchPlays(fixtureId, leagueSlug = 'eng.1') {
  * @returns {Promise<{ home: string[], away: string[], startersHome: any[], startersAway: any[], hasLineups: boolean }>}
  */
 export async function getMatchLineups(fixtureId, leagueSlug = 'eng.1', preloadedSummary = null) {
-  const summary = preloadedSummary || (await getMatchSummary(fixtureId, leagueSlug));
+  const apiSlug = leagueSlug && leagueSlug.startsWith('afc.champions') ? 'afc.champions' : leagueSlug;
+  const summary = preloadedSummary || (await getMatchSummary(fixtureId, apiSlug));
 
   // Step 1: Check summary.rosters
   const rosters = summary?.rosters;
@@ -346,7 +406,7 @@ export async function getMatchLineups(fixtureId, leagueSlug = 'eng.1', preloaded
   // Step 2: Fallback to core competitor roster
   logger.debug(`Lineups not complete in summary for ${fixtureId}; attempting core roster fallback...`);
   try {
-    const compUrl = `${CORE_BASE}/leagues/${leagueSlug}/events/${fixtureId}/competitions/${fixtureId}`;
+    const compUrl = `${CORE_BASE}/leagues/${apiSlug}/events/${fixtureId}/competitions/${fixtureId}`;
     const compRes = await apiClient.get(compUrl);
     const competitors = compRes.data?.competitors || [];
 
@@ -362,7 +422,7 @@ export async function getMatchLineups(fixtureId, leagueSlug = 'eng.1', preloaded
         const names = [];
         for (const entry of targetEntries) {
           if (entry.athlete?.$ref) {
-            const name = await resolveAthlete(entry.athlete.$ref, leagueSlug);
+            const name = await resolveAthlete(entry.athlete.$ref, apiSlug);
             if (name) names.push(name);
           }
         }
@@ -402,7 +462,7 @@ export async function getMatchLineups(fixtureId, leagueSlug = 'eng.1', preloaded
  * @param {any} matchContext
  * @returns {any|null}
  */
-export function normalizeEvent(item, matchContext = {}) {
+function _normalizeEvent(item, matchContext = {}) {
   if (!item) return null;
 
   const text = (item.text || item.alternativeText || '').trim();
@@ -667,6 +727,32 @@ export function normalizeEvent(item, matchContext = {}) {
   }
 
   return null;
+}
+
+export function normalizeEvent(item, matchContext = {}) {
+  const result = _normalizeEvent(item, matchContext);
+  if (result) {
+    let occurrenceTime = null;
+    let rawTime = item.wallclock || item.wallClock || item.play?.wallclock || item.play?.wallClock || item.timestamp || item.date;
+    if (rawTime) {
+      const d = new Date(rawTime);
+      if (!isNaN(d.getTime())) {
+        occurrenceTime = d.toISOString();
+      }
+    }
+    if (!occurrenceTime && matchContext.kickoff && result.minute !== undefined && result.minute !== null) {
+      const kickoff = new Date(matchContext.kickoff);
+      if (!isNaN(kickoff.getTime())) {
+        const extraMinutes = result.minute + (result.minute > 45 ? 15 : 0);
+        occurrenceTime = new Date(kickoff.getTime() + extraMinutes * 60 * 1000).toISOString();
+      }
+    }
+    if (!occurrenceTime) {
+      occurrenceTime = new Date().toISOString();
+    }
+    result.occurrenceTime = occurrenceTime;
+  }
+  return result;
 }
 
 /**

@@ -52,6 +52,116 @@
       "lastPeriod": 5,
       "lastClock": "120+5'",
       "lastUpdated": "2026-09-15T09:16:22.640Z"
+    },
+    "401912659": {
+      "fixtureId": "401912659",
+      "homeName": "Ratchaburi FC",
+      "awayName": "Shanghai Port",
+      "leagueName": "AFC Champions League Elite",
+      "leagueSlug": "afc.champions.east",
+      "lineupsPosted": true,
+      "lineupPostId": null,
+      "lastScore": {
+        "home": 0,
+        "away": 4
+      },
+      "postedEvents": [
+        "401912659:GOAL:51:0-3:wu lei",
+        "401912659:GOAL:51:0-4:wu lei"
+      ],
+      "goalPosts": {
+        "51:0-3": {
+          "postId": "live-sim-post-1789470750292-498",
+          "scorer": "Wu Lei",
+          "assist": null
+        },
+        "51:0-4": {
+          "postId": "live-sim-post-1789470783221-873",
+          "scorer": "Wu Lei",
+          "assist": "Xin Yue"
+        }
+      },
+      "injuryEvents": [],
+      "lastStatus": "in",
+      "lastPeriod": 2,
+      "lastClock": "55'",
+      "lastUpdated": "2026-09-15T11:15:42.774Z"
+    },
+    "401912660": {
+      "fixtureId": "401912660",
+      "homeName": "Kashima Antlers",
+      "awayName": "Newcastle Jets",
+      "leagueName": "AFC Champions League Elite",
+      "leagueSlug": "afc.champions.east",
+      "lineupsPosted": true,
+      "lineupPostId": null,
+      "lastScore": {
+        "home": 6,
+        "away": 0
+      },
+      "postedEvents": [
+        "401912660:GOAL:56:6-0:homare tokuda"
+      ],
+      "goalPosts": {
+        "56:6-0": {
+          "postId": "live-sim-post-1789470942502-619",
+          "scorer": "Homare Tokuda",
+          "assist": null
+        }
+      },
+      "injuryEvents": [],
+      "lastStatus": "in",
+      "lastPeriod": 2,
+      "lastClock": "57'",
+      "lastUpdated": "2026-09-15T11:15:42.504Z"
+    },
+    "401912671": {
+      "fixtureId": "401912671",
+      "homeName": "Gamba Osaka",
+      "awayName": "Cong An Hanoi",
+      "leagueName": "AFC Champions League Elite",
+      "leagueSlug": "afc.champions.east",
+      "lineupsPosted": true,
+      "lineupPostId": null,
+      "lastScore": {
+        "home": 1,
+        "away": 0
+      },
+      "postedEvents": [],
+      "goalPosts": {},
+      "injuryEvents": [],
+      "lastStatus": "in",
+      "lastPeriod": 2,
+      "lastClock": "57'",
+      "lastUpdated": "2026-09-15T11:15:42.240Z"
+    },
+    "401912672": {
+      "fixtureId": "401912672",
+      "homeName": "Daejeon Hana Citizen",
+      "awayName": "Kyoto Sanga",
+      "leagueName": "AFC Champions League Elite",
+      "leagueSlug": "afc.champions.east",
+      "lineupsPosted": true,
+      "lineupPostId": null,
+      "lastScore": {
+        "home": 0,
+        "away": 0
+      },
+      "postedEvents": [
+        "401912672:GOAL:49:1-0:gustav ludwigson"
+      ],
+      "goalPosts": {
+        "49:1-0": {
+          "postId": "live-sim-post-1789470581227-346",
+          "scorer": "Gustav Ludwigson",
+          "assist": "Kang Yoon-Seong"
+        }
+      },
+      "injuryEvents": [],
+      "lastStatus": "in",
+      "lastPeriod": 2,
+      "lastClock": "57'",
+      "lastUpdated": "2026-09-15T11:15:41.896Z"
     }
   }
 }

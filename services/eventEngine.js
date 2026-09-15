@@ -1,6 +1,7 @@
 // services/eventEngine.js
 import { buildMatchHashtags } from '../utils/hashtags.js';
 import logger from '../utils/logger.js';
+import config from '../config/env.js';
 import { eventSignature } from './espn.js';
 
 export const EVENT_EMOJIS = {
@@ -303,13 +304,22 @@ export function compareMatchState(prevRecord, currentMatch) {
   if (prevStatus === 'pre' && currStatus === 'in') {
     const sig = `${fixtureId}:KICKOFF:0:0-0:all`;
     if (!postedSignatures.has(sig)) {
-      newEvents.push({
-        type: 'KICKOFF',
-        minute: 1,
-        homeScore: currentMatch.score.home,
-        awayScore: currentMatch.score.away,
-        sig,
-      });
+      const currentTime = new Date();
+      const kickoffTime = new Date(currentMatch.kickoff);
+      const diffMs = currentTime.getTime() - kickoffTime.getTime();
+      const diffMinutes = diffMs / (1000 * 60);
+
+      if (diffMinutes >= 0 && diffMinutes <= 1) {
+        newEvents.push({
+          type: 'KICKOFF',
+          minute: 1,
+          homeScore: currentMatch.score.home,
+          awayScore: currentMatch.score.away,
+          sig,
+        });
+      } else {
+        logger.info(`[KICKOFF GATE] Skip kickoff post for ${currentMatch.homeName} vs ${currentMatch.awayName}: difference of ${diffMinutes.toFixed(2)} minutes is outside [0, 1] interval.`);
+      }
     }
   }
 
@@ -491,8 +501,24 @@ export function compareMatchState(prevRecord, currentMatch) {
     }
   }
 
+  const currentTime = new Date();
+  const filteredNewEvents = newEvents.filter((ev) => {
+    if (config.isMockMode) {
+      return true;
+    }
+    const eventOccurrenceTime = new Date(ev.occurrenceTime || currentTime);
+    const diffMs = currentTime.getTime() - eventOccurrenceTime.getTime();
+    const diffMinutes = diffMs / (1000 * 60);
+
+    const isWithinWindow = diffMinutes >= 0 && diffMinutes <= 5;
+    if (!isWithinWindow) {
+      logger.info(`[TIMING GATE] Skip event post for ${currentMatch.homeName} vs ${currentMatch.awayName} (${ev.type}): difference of ${diffMinutes.toFixed(2)} minutes is outside the [0, 5] minutes allowed window.`);
+    }
+    return isWithinWindow;
+  });
+
   return {
-    newEvents,
+    newEvents: filteredNewEvents,
     goalPostEdits,
     injuryPostEdits,
     lineupPostAction,

@@ -24,6 +24,8 @@ const LEAGUE_HASHTAG_MAP = {
   'copa del rey': ['#CopaDelRey'],
   'copa libertadores': ['#Libertadores'],
   'fifa world cup': ['#WorldCup'],
+  'afc champions league elite east': ['#ACLElite', '#ACLEast'],
+  'afc champions league elite west': ['#ACLElite', '#ACLWest'],
 };
 
 /**

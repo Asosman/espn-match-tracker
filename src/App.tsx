@@ -215,6 +215,40 @@ export default function App() {
     [todayMatches]
   );
 
+  // Group matches by league
+  const groupMatchesByLeague = useCallback((matches: MatchEventSummary[]) => {
+    const groups: { [leagueName: string]: MatchEventSummary[] } = {};
+    matches.forEach((match) => {
+      const leagueName = match.league || 'Other Competitions';
+      if (!groups[leagueName]) {
+        groups[leagueName] = [];
+      }
+      groups[leagueName].push(match);
+    });
+
+    const leagueOrder = SUPPORTED_LEAGUES.map((l) => l.name);
+    const sortedLeagueNames = Object.keys(groups).sort((a, b) => {
+      const indexA = leagueOrder.indexOf(a);
+      const indexB = leagueOrder.indexOf(b);
+      
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    return sortedLeagueNames.map((leagueName) => ({
+      leagueName,
+      matches: groups[leagueName],
+    }));
+  }, []);
+
+  const groupedYesterday = useMemo(() => groupMatchesByLeague(displayYesterday), [groupMatchesByLeague, displayYesterday]);
+  const groupedToday = useMemo(() => groupMatchesByLeague(displayToday), [groupMatchesByLeague, displayToday]);
+  const groupedMonitored = useMemo(() => groupMatchesByLeague(displayMonitored), [groupMatchesByLeague, displayMonitored]);
+
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans selection:bg-red-900 selection:text-white">
       {/* Header with separated tabs, monitored count, and sync controls */}
@@ -297,17 +331,29 @@ export default function App() {
               </div>
             </div>
 
-            {displayMonitored.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {displayMonitored.map((match) => (
-                  <MatchCard
-                    key={`monitored-${match.id}`}
-                    match={match}
-                    leagueDisplayName={match.league}
-                    isMonitored={monitoredMatchIds.has(match.id)}
-                    onToggleMonitor={toggleMonitorMatch}
-                    onSelectMatch={(m) => setActiveMatch(m)}
-                  />
+            {groupedMonitored.length > 0 ? (
+              <div className="space-y-8">
+                {groupedMonitored.map(({ leagueName, matches }) => (
+                  <div key={leagueName} className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-neutral-900 pb-1.5">
+                      <span className="w-1.5 h-3 bg-red-500 rounded-full" />
+                      <h3 className="text-xs font-bold text-neutral-400 tracking-wider uppercase">
+                        {leagueName}
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {matches.map((match) => (
+                        <MatchCard
+                          key={`monitored-${match.id}`}
+                          match={match}
+                          leagueDisplayName={match.league}
+                          isMonitored={monitoredMatchIds.has(match.id)}
+                          onToggleMonitor={toggleMonitorMatch}
+                          onSelectMatch={(m) => setActiveMatch(m)}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -379,17 +425,29 @@ export default function App() {
                   </div>
                 ))}
               </div>
-            ) : displayYesterday.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {displayYesterday.map((match) => (
-                  <MatchCard
-                    key={`yesterday-${match.id}`}
-                    match={match}
-                    leagueDisplayName={match.league}
-                    isMonitored={monitoredMatchIds.has(match.id)}
-                    onToggleMonitor={toggleMonitorMatch}
-                    onSelectMatch={(m) => setActiveMatch(m)}
-                  />
+            ) : groupedYesterday.length > 0 ? (
+              <div className="space-y-8">
+                {groupedYesterday.map(({ leagueName, matches }) => (
+                  <div key={leagueName} className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-neutral-900 pb-1.5">
+                      <span className="w-1.5 h-3 bg-red-500 rounded-full" />
+                      <h3 className="text-xs font-bold text-neutral-400 tracking-wider uppercase">
+                        {leagueName}
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {matches.map((match) => (
+                        <MatchCard
+                          key={`yesterday-${match.id}`}
+                          match={match}
+                          leagueDisplayName={match.league}
+                          isMonitored={monitoredMatchIds.has(match.id)}
+                          onToggleMonitor={toggleMonitorMatch}
+                          onSelectMatch={(m) => setActiveMatch(m)}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -457,17 +515,29 @@ export default function App() {
                   </div>
                 ))}
               </div>
-            ) : displayToday.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {displayToday.map((match) => (
-                  <MatchCard
-                    key={`today-${match.id}`}
-                    match={match}
-                    leagueDisplayName={match.league}
-                    isMonitored={monitoredMatchIds.has(match.id)}
-                    onToggleMonitor={toggleMonitorMatch}
-                    onSelectMatch={(m) => setActiveMatch(m)}
-                  />
+            ) : groupedToday.length > 0 ? (
+              <div className="space-y-8">
+                {groupedToday.map(({ leagueName, matches }) => (
+                  <div key={leagueName} className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-neutral-900 pb-1.5">
+                      <span className="w-1.5 h-3 bg-red-500 rounded-full" />
+                      <h3 className="text-xs font-bold text-neutral-400 tracking-wider uppercase">
+                        {leagueName}
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {matches.map((match) => (
+                        <MatchCard
+                          key={`today-${match.id}`}
+                          match={match}
+                          leagueDisplayName={match.league}
+                          isMonitored={monitoredMatchIds.has(match.id)}
+                          onToggleMonitor={toggleMonitorMatch}
+                          onSelectMatch={(m) => setActiveMatch(m)}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (

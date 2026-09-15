@@ -146,6 +146,45 @@ export function normalizeCompetitor(c: any, index: number = 0): TeamCompetitor {
 }
 
 /**
+ * Dynamically determines if an AFC Champions League Elite match is in the East or West region.
+ */
+export function getAfcRegion(homeName?: string, awayName?: string): 'east' | 'west' {
+  const westKeywords = [
+    'hilal', 'nassr', 'ahli', 'sadd', 'gharafa', 'rayyan', 'ain', 'wasl', 
+    'pakhtakor', 'persepolis', 'esteghlal', 'shorta', 'saudi', 'qatar', 'uae', 
+    'uzbekistan', 'iran', 'iraq', 'baghdad', 'tehran', 'riyadh', 'dubai', 'doha', 'ahly'
+  ];
+  
+  const eastKeywords = [
+    'kobe', 'kawasaki', 'yokohama', 'hiroshima', 'central coast', 'mariners', 
+    'gwangju', 'daejeon', 'ulsan', 'shanghai', 'shenhua', 'johor', 'buriram', 
+    'kyoto', 'japan', 'korea', 'china', 'australia', 'thailand', 'malaysia', 
+    'singapore', 'sanga', 'citizen', 'marinos', 'frontale', 'vissel', 'port',
+    'sydney', 'melbourne', 'victory', 'adelaide'
+  ];
+
+  const h = (homeName || '').toLowerCase();
+  const a = (awayName || '').toLowerCase();
+
+  // Check West first
+  for (const kw of westKeywords) {
+    if (h.includes(kw) || a.includes(kw)) {
+      return 'west';
+    }
+  }
+
+  // Check East
+  for (const kw of eastKeywords) {
+    if (h.includes(kw) || a.includes(kw)) {
+      return 'east';
+    }
+  }
+
+  // Fallback default
+  return 'east';
+}
+
+/**
  * Resolves a human-friendly football league name from season slugs or league identifiers
  */
 export function resolveLeagueDisplayName(
@@ -153,6 +192,9 @@ export function resolveLeagueDisplayName(
   seasonSlug?: string,
   fallbackLeagueName?: string
 ): string {
+  if (slug === 'afc.champions.east') return 'AFC Champions League Elite East';
+  if (slug === 'afc.champions.west') return 'AFC Champions League Elite West';
+
   if (fallbackLeagueName && fallbackLeagueName !== 'Soccer' && fallbackLeagueName !== 'soccer') {
     return fallbackLeagueName;
   }
@@ -189,7 +231,10 @@ async function getEventCommentary(eventId: string, leagueSlug: string): Promise<
     return commentaryCache.get(eventId)!;
   }
   try {
-    const apiLeague = leagueSlug === 'sau.1' ? 'ksa.1' : leagueSlug;
+    let apiLeague = leagueSlug === 'sau.1' ? 'ksa.1' : leagueSlug;
+    if (apiLeague.startsWith('afc.champions')) {
+      apiLeague = 'afc.champions';
+    }
     const url = `${SITE_BASE}/sports/soccer/${apiLeague}/summary?event=${eventId}`;
     const res = await fetch(url);
     if (res.ok) {
@@ -211,7 +256,10 @@ async function fetchSingleLeagueScoreboard(
   league: string,
   dateStr: string
 ): Promise<{ events: MatchEventSummary[]; leagueName?: string }> {
-  const apiLeague = league === 'sau.1' ? 'ksa.1' : league;
+  let apiLeague = league === 'sau.1' ? 'ksa.1' : league;
+  if (apiLeague.startsWith('afc.champions')) {
+    apiLeague = 'afc.champions';
+  }
   const url = `${SITE_BASE}/sports/soccer/${apiLeague}/scoreboard?dates=${dateStr}`;
   try {
     const res = await fetch(url);
@@ -221,14 +269,26 @@ async function fetchSingleLeagueScoreboard(
     const data = await res.json();
     const rawLeagueName = data.leagues?.[0]?.name;
 
-    const events: MatchEventSummary[] = (data.events || []).map((e: any) => {
+    let events: MatchEventSummary[] = (data.events || []).map((e: any) => {
       const comp = e.competitions?.[0] || {};
       const competitors = (comp.competitors || []).map((c: any, idx: number) =>
         normalizeCompetitor(c, idx)
       );
 
       const seasonSlug = e.season?.slug;
-      const cleanLeague = resolveLeagueDisplayName(league, seasonSlug, rawLeagueName);
+      
+      // Determine region slug for AFC
+      let resolvedLeagueSlug = league;
+      if (league.startsWith('afc.champions') || e.league?.slug === 'afc.champions' || comp.league?.slug === 'afc.champions') {
+        const homeComp = competitors.find((c: any) => c.homeAway === 'home');
+        const awayComp = competitors.find((c: any) => c.homeAway === 'away');
+        const homeName = homeComp?.displayName || homeComp?.name || '';
+        const awayName = awayComp?.displayName || awayComp?.name || '';
+        const region = getAfcRegion(homeName, awayName);
+        resolvedLeagueSlug = `afc.champions.${region}`;
+      }
+
+      const cleanLeague = resolveLeagueDisplayName(resolvedLeagueSlug, seasonSlug, rawLeagueName);
       const details = comp.details || e.details || [];
 
       return {
@@ -239,6 +299,7 @@ async function fetchSingleLeagueScoreboard(
         shortName: e.shortName,
         sport: 'soccer',
         league: cleanLeague,
+        resolvedLeagueSlug,
         details,
         status: e.status,
         competitions: [
@@ -255,6 +316,11 @@ async function fetchSingleLeagueScoreboard(
         ],
       };
     });
+
+    // If a specific region was requested, filter events to only that region
+    if (league === 'afc.champions.east' || league === 'afc.champions.west') {
+      events = events.filter((ev: MatchEventSummary) => ev.resolvedLeagueSlug === league);
+    }
 
     // Enrich matches that have goals or scoring plays with summary commentary to capture assist names
     const matchesWithGoals = events.filter((ev) => {
@@ -332,10 +398,11 @@ export async function fetchComprehensiveMatch(
   fallbackEvent?: MatchEventSummary
 ): Promise<ComprehensiveMatchData> {
   const startTime = performance.now();
-  const siteSummaryUrl = `${SITE_BASE}/sports/soccer/${league}/summary?event=${eventId}`;
-  const corePlaysUrl = `${CORE_BASE}/sports/soccer/leagues/${league}/events/${eventId}/competitions/${eventId}/plays?limit=100`;
+  const apiLeague = league.startsWith('afc.champions') ? 'afc.champions' : league;
+  const siteSummaryUrl = `${SITE_BASE}/sports/soccer/${apiLeague}/summary?event=${eventId}`;
+  const corePlaysUrl = `${CORE_BASE}/sports/soccer/leagues/${apiLeague}/events/${eventId}/competitions/${eventId}/plays?limit=100`;
   const cdnMatchUrl = `${CDN_BASE}/soccer/match?gameId=${eventId}&xhr=1`;
-  const siteV3Url = `${SITE_V3_BASE}/sports/soccer/${league}/summary?event=${eventId}`;
+  const siteV3Url = `${SITE_V3_BASE}/sports/soccer/${apiLeague}/summary?event=${eventId}`;
 
   // Fetch in parallel
   const [summaryRes, corePlaysRes, cdnRes] = await Promise.allSettled([
