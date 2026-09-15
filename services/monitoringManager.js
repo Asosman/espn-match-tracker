@@ -151,7 +151,7 @@ class MonitoringManager {
     }
     
     // 2. Compare states and detect transitions/events
-    const { newEvents, goalPostEdits, injuryPostEdits, lineupPostAction } = compareMatchState(
+    const { newEvents, goalPostEdits, injuryPostEdits, lineupPostAction, eventStates: updatedEventStates } = compareMatchState(
       prevRecord,
       currentMatch
     );
@@ -159,6 +159,7 @@ class MonitoringManager {
     const postedEventsSet = new Set(prevRecord?.postedEvents || []);
     const goalPosts = { ...(prevRecord?.goalPosts || {}) };
     const injuryEvents = [...(prevRecord?.injuryEvents || [])];
+    const eventStates = { ...(updatedEventStates || {}) };
     let lineupsPosted = Boolean(prevRecord?.lineupsPosted);
     let lineupPostId = prevRecord?.lineupPostId || null;
 
@@ -178,24 +179,35 @@ class MonitoringManager {
       logger.info(`Publishing new event: [${ev.type}] for ${currentMatch.homeName} vs ${currentMatch.awayName}`);
       const postId = await this.facebook.createPagePost(postMsg);
 
-      if (ev.sig) postedEventsSet.add(ev.sig);
+      if (postId) {
+        if (ev.sig) postedEventsSet.add(ev.sig);
 
-      // Track goal posts for future edits
-      if (ev.type === 'GOAL' && ev.goalKey) {
-        goalPosts[ev.goalKey] = {
-          postId,
-          scorer: ev.player || null,
-          assist: ev.assist || null,
+        eventStates[ev.eventKey] = {
+          eventKey: ev.eventKey,
+          eventType: ev.type,
+          facebookPostId: postId,
+          postedAt: new Date().toISOString(),
+          lastContentSignature: ev.contentSignature || '',
+          status: 'POSTED'
         };
-      }
 
-      // Track injury posts for future edits
-      if (ev.type === 'INJURY') {
-        injuryEvents.push({
-          minute: ev.minute,
-          player: ev.player || null,
-          postId,
-        });
+        // Track goal posts for future edits (legacy compatibility)
+        if (ev.type === 'GOAL' && ev.goalKey) {
+          goalPosts[ev.goalKey] = {
+            postId,
+            scorer: ev.player || null,
+            assist: ev.assist || null,
+          };
+        }
+
+        // Track injury posts for future edits (legacy compatibility)
+        if (ev.type === 'INJURY') {
+          injuryEvents.push({
+            minute: ev.minute,
+            player: ev.player || null,
+            postId,
+          });
+        }
       }
     }
 
@@ -203,23 +215,35 @@ class MonitoringManager {
     for (const edit of goalPostEdits) {
       const updatedMsg = formatEventPost(edit.event, currentMatch);
       logger.info(`Updating Facebook goal post ${edit.postId} with newly resolved scorer/assist...`);
-      await this.facebook.updatePagePost(edit.postId, updatedMsg);
+      const success = await this.facebook.updatePagePost(edit.postId, updatedMsg);
 
-      goalPosts[edit.goalKey] = {
-        postId: edit.postId,
-        scorer: edit.event.player || null,
-        assist: edit.event.assist || null,
-      };
+      if (success) {
+        if (eventStates[edit.eventKey]) {
+          eventStates[edit.eventKey].lastContentSignature = edit.newContentSig;
+        }
+
+        goalPosts[edit.goalKey] = {
+          postId: edit.postId,
+          scorer: edit.event.player || null,
+          assist: edit.event.assist || null,
+        };
+      }
     }
 
     // 6. Apply Injury Post Edits (when player name resolves later)
     for (const edit of injuryPostEdits) {
       const updatedMsg = formatEventPost(edit.event, currentMatch);
       logger.info(`Updating Facebook injury post ${edit.postId} with resolved player name...`);
-      await this.facebook.updatePagePost(edit.postId, updatedMsg);
+      const success = await this.facebook.updatePagePost(edit.postId, updatedMsg);
 
-      const inj = injuryEvents.find((i) => i.minute === edit.event.minute);
-      if (inj) inj.player = edit.event.player;
+      if (success) {
+        if (eventStates[edit.eventKey]) {
+          eventStates[edit.eventKey].lastContentSignature = edit.newContentSig;
+        }
+
+        const inj = injuryEvents.find((i) => i.minute === edit.event.minute);
+        if (inj) inj.player = edit.event.player;
+      }
     }
 
     // 7. Persist Updated Match State Atomically
@@ -235,6 +259,7 @@ class MonitoringManager {
       postedEvents: Array.from(postedEventsSet),
       goalPosts,
       injuryEvents,
+      eventStates,
       lastStatus: currentMatch.status.state,
       lastPeriod: currentMatch.status.period,
       lastClock: currentMatch.status.clock,

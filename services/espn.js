@@ -732,6 +732,11 @@ function _normalizeEvent(item, matchContext = {}) {
 export function normalizeEvent(item, matchContext = {}) {
   const result = _normalizeEvent(item, matchContext);
   if (result) {
+    if (item.id) {
+      result.id = String(item.id);
+    } else if (item.play?.id) {
+      result.id = String(item.play.id);
+    }
     let occurrenceTime = null;
     let rawTime = item.wallclock || item.wallClock || item.play?.wallclock || item.play?.wallClock || item.timestamp || item.date;
     if (rawTime) {
@@ -838,14 +843,31 @@ export async function fetchMatchDetails(fixtureId, leagueSlug = 'eng.1', existin
         }
       }
     }
-  }
 
-  // Fallback: if extractedEvents was still empty, check last 15 commentary items for any events
-  if (extractedEvents.length === 0 && summary?.commentary?.length > 0) {
-    for (const com of summary.commentary.slice(-15)) {
+    // Always scan commentary for other non-goal events (e.g. INJURY, VAR, PENALTY, RED_CARD)
+    // that might not be in keyEvents but exist in the commentary stream.
+    for (const com of summary.commentary) {
       const parsed = normalizeEvent(com, normalized);
       if (parsed) {
-        extractedEvents.push(parsed);
+        if (parsed.type === 'GOAL') continue; // Goals are already handled above
+
+        const isDuplicate = extractedEvents.some(
+          (e) => e.type === parsed.type && e.minute === parsed.minute
+        );
+
+        if (!isDuplicate) {
+          extractedEvents.push(parsed);
+        } else if (parsed.type === 'INJURY') {
+          // If the injury exists, but now has resolved player information, enrich it in place
+          const existing = extractedEvents.find(
+            (e) => e.type === 'INJURY' && e.minute === parsed.minute
+          );
+          if (existing && !existing.player && parsed.player) {
+            existing.player = parsed.player;
+            existing.description = parsed.description;
+            existing.text = parsed.text;
+          }
+        }
       }
     }
   }

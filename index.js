@@ -60,7 +60,7 @@ async function runMockSimulation() {
     const fixtureId = stepState.fixtureId;
     const prevRecord = await db.getMatchRecord(fixtureId);
 
-    const { newEvents, goalPostEdits, injuryPostEdits, lineupPostAction } = compareMatchState(
+    const { newEvents, goalPostEdits, injuryPostEdits, lineupPostAction, eventStates: updatedEventStates } = compareMatchState(
       prevRecord,
       stepState
     );
@@ -68,6 +68,7 @@ async function runMockSimulation() {
     const postedEventsSet = new Set(prevRecord?.postedEvents || []);
     const goalPosts = { ...(prevRecord?.goalPosts || {}) };
     const injuryEvents = [...(prevRecord?.injuryEvents || [])];
+    const eventStates = { ...(updatedEventStates || {}) };
     let lineupsPosted = Boolean(prevRecord?.lineupsPosted);
     let lineupPostId = prevRecord?.lineupPostId || null;
 
@@ -89,53 +90,79 @@ async function runMockSimulation() {
     for (const ev of newEvents) {
       const postMsg = formatEventPost(ev, stepState);
       const postId = await mockFacebook.createPagePost(postMsg);
-      if (ev.sig) postedEventsSet.add(ev.sig);
+      
+      if (postId) {
+        if (ev.sig) postedEventsSet.add(ev.sig);
 
-      console.log(`\n⚡ [FACEBOOK EVENT POSTED: ${ev.type}]`);
-      console.log(postMsg);
-      console.log(`════════════════════════════════════════════════════`);
-
-      if (ev.type === 'GOAL' && ev.goalKey) {
-        goalPosts[ev.goalKey] = {
-          postId,
-          scorer: ev.player || null,
-          assist: ev.assist || null,
+        eventStates[ev.eventKey] = {
+          eventKey: ev.eventKey,
+          eventType: ev.type,
+          facebookPostId: postId,
+          postedAt: new Date().toISOString(),
+          lastContentSignature: ev.contentSignature || '',
+          status: 'POSTED'
         };
-      }
-      if (ev.type === 'INJURY') {
-        injuryEvents.push({
-          minute: ev.minute,
-          player: ev.player || null,
-          postId,
-        });
+
+        console.log(`\n⚡ [FACEBOOK EVENT POSTED: ${ev.type}]`);
+        console.log(postMsg);
+        console.log(`════════════════════════════════════════════════════`);
+
+        if (ev.type === 'GOAL' && ev.goalKey) {
+          goalPosts[ev.goalKey] = {
+            postId,
+            scorer: ev.player || null,
+            assist: ev.assist || null,
+          };
+        }
+        if (ev.type === 'INJURY') {
+          injuryEvents.push({
+            minute: ev.minute,
+            player: ev.player || null,
+            postId,
+          });
+        }
       }
     }
 
     // Process goal edits (scorer/assist resolution)
     for (const edit of goalPostEdits) {
       const updatedMsg = formatEventPost(edit.event, stepState);
-      await mockFacebook.updatePagePost(edit.postId, updatedMsg);
-      goalPosts[edit.goalKey] = {
-        postId: edit.postId,
-        scorer: edit.event.player || null,
-        assist: edit.event.assist || null,
-      };
+      const success = await mockFacebook.updatePagePost(edit.postId, updatedMsg);
+      
+      if (success) {
+        if (eventStates[edit.eventKey]) {
+          eventStates[edit.eventKey].lastContentSignature = edit.newContentSig;
+        }
 
-      console.log(`\n✏️ [FACEBOOK GOAL POST UPDATED]`);
-      console.log(updatedMsg);
-      console.log(`════════════════════════════════════════════════════`);
+        goalPosts[edit.goalKey] = {
+          postId: edit.postId,
+          scorer: edit.event.player || null,
+          assist: edit.event.assist || null,
+        };
+
+        console.log(`\n✏️ [FACEBOOK GOAL POST UPDATED]`);
+        console.log(updatedMsg);
+        console.log(`════════════════════════════════════════════════════`);
+      }
     }
 
     // Process injury edits
     for (const edit of injuryPostEdits) {
       const updatedMsg = formatEventPost(edit.event, stepState);
-      await mockFacebook.updatePagePost(edit.postId, updatedMsg);
-      const inj = injuryEvents.find((i) => i.minute === edit.event.minute);
-      if (inj) inj.player = edit.event.player;
+      const success = await mockFacebook.updatePagePost(edit.postId, updatedMsg);
+      
+      if (success) {
+        if (eventStates[edit.eventKey]) {
+          eventStates[edit.eventKey].lastContentSignature = edit.newContentSig;
+        }
 
-      console.log(`\n✏️ [FACEBOOK INJURY POST UPDATED]`);
-      console.log(updatedMsg);
-      console.log(`════════════════════════════════════════════════════`);
+        const inj = injuryEvents.find((i) => i.minute === edit.event.minute);
+        if (inj) inj.player = edit.event.player;
+
+        console.log(`\n✏️ [FACEBOOK INJURY POST UPDATED]`);
+        console.log(updatedMsg);
+        console.log(`════════════════════════════════════════════════════`);
+      }
     }
 
     // Persist to database
@@ -151,6 +178,7 @@ async function runMockSimulation() {
       postedEvents: Array.from(postedEventsSet),
       goalPosts,
       injuryEvents,
+      eventStates,
       lastStatus: stepState.status.state,
       lastPeriod: stepState.status.period,
       lastClock: stepState.status.clock,

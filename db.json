@@ -13,21 +13,22 @@
         "away": 1
       },
       "postedEvents": [
-        "401678123:KICKOFF:0:0-0:all",
-        "401678123:GOAL:24:1-0:",
-        "401678123:RED_CARD:31:0-0:moisés caicedo",
-        "401678123:INJURY:38:0-0:",
-        "401678123:VAR:42:0-0:",
-        "401678123:PENALTY:44:0-0:kai havertz",
-        "401678123:MISSED_PENALTY:45:0-0:kai havertz",
-        "401678123:HALF_TIME:45:1-0:all",
-        "401678123:SECOND_HALF:46:1-0:all",
-        "401678123:GOAL:88:1-1:cole palmer",
-        "401678123:FULL_TIME_PENDING_ET:90:1-1:all",
-        "401678123:EXTRA_TIME_START:90:1-1:all",
-        "401678123:EXTRA_TIME_HALF:105:1-1:all",
-        "401678123:PENALTY_SHOOTOUT:120:1-1:all",
-        "401678123:FULL_TIME_POST_ET:120:1-1:all"
+        "401678123:KICKOFF:1:1",
+        "401678123:GOAL:1:24:1-0",
+        "401678123:RED_CARD:1:31",
+        "401678123:INJURY:1:38",
+        "401678123:VAR:1:42",
+        "401678123:PENALTY:1:44",
+        "401678123:MISSED_PENALTY:1:45",
+        "401678123:HALF_TIME:1:45",
+        "401678123:SECOND_HALF:2:46",
+        "401678123:GOAL:1:24:1-1",
+        "401678123:GOAL:1:88:1-1",
+        "401678123:FULL_TIME_PENDING_ET:2:90",
+        "401678123:EXTRA_TIME_START:3:90",
+        "401678123:EXTRA_TIME_HALF:4:105",
+        "401678123:PENALTY_SHOOTOUT:5:120",
+        "401678123:FULL_TIME_POST_ET:3:120"
       ],
       "goalPosts": {
         "24:1-0": {
@@ -35,8 +36,13 @@
           "scorer": "Bukayo Saka",
           "assist": "Martin Ødegaard"
         },
-        "88:1-1": {
+        "24:1-1": {
           "postId": "mock-post-011",
+          "scorer": "Bukayo Saka",
+          "assist": "Martin Ødegaard"
+        },
+        "88:1-1": {
+          "postId": "mock-post-012",
           "scorer": "Cole Palmer",
           "assist": "Enzo Fernández"
         }
@@ -48,152 +54,140 @@
           "postId": "mock-post-005"
         }
       ],
+      "eventStates": {
+        "401678123:KICKOFF:1:1": {
+          "eventKey": "401678123:KICKOFF:1:1",
+          "eventType": "KICKOFF",
+          "facebookPostId": "mock-post-002",
+          "postedAt": "2026-09-15T14:35:47.412Z",
+          "lastContentSignature": "KICKOFF|0-0|||1|",
+          "status": "POSTED"
+        },
+        "401678123:GOAL:1:24:1-0": {
+          "eventKey": "401678123:GOAL:1:24:1-0",
+          "eventType": "GOAL",
+          "facebookPostId": "mock-post-003",
+          "postedAt": "2026-09-15T14:35:47.919Z",
+          "lastContentSignature": "GOAL|1-0|Bukayo Saka|Martin Ødegaard|24|",
+          "status": "POSTED"
+        },
+        "401678123:RED_CARD:1:31": {
+          "eventKey": "401678123:RED_CARD:1:31",
+          "eventType": "RED_CARD",
+          "facebookPostId": "mock-post-004",
+          "postedAt": "2026-09-15T14:35:48.941Z",
+          "lastContentSignature": "RED_CARD|-|Moisés Caicedo||31|Violent conduct tackle",
+          "status": "POSTED"
+        },
+        "401678123:INJURY:1:38": {
+          "eventKey": "401678123:INJURY:1:38",
+          "eventType": "INJURY",
+          "facebookPostId": "mock-post-005",
+          "postedAt": "2026-09-15T14:35:49.459Z",
+          "lastContentSignature": "INJURY|-|Gabriel Martinelli||38|Ankle sprain after heavy challenge",
+          "status": "POSTED"
+        },
+        "401678123:VAR:1:42": {
+          "eventKey": "401678123:VAR:1:42",
+          "eventType": "VAR",
+          "facebookPostId": "mock-post-006",
+          "postedAt": "2026-09-15T14:35:50.489Z",
+          "lastContentSignature": "VAR|-|||42|Goal disallowed for offside following VAR review",
+          "status": "POSTED"
+        },
+        "401678123:PENALTY:1:44": {
+          "eventKey": "401678123:PENALTY:1:44",
+          "eventType": "PENALTY",
+          "facebookPostId": "mock-post-007",
+          "postedAt": "2026-09-15T14:35:51.006Z",
+          "lastContentSignature": "PENALTY|-|Kai Havertz||44|Handball in the penalty box",
+          "status": "POSTED"
+        },
+        "401678123:MISSED_PENALTY:1:45": {
+          "eventKey": "401678123:MISSED_PENALTY:1:45",
+          "eventType": "MISSED_PENALTY",
+          "facebookPostId": "mock-post-008",
+          "postedAt": "2026-09-15T14:35:51.524Z",
+          "lastContentSignature": "MISSED_PENALTY|-|Kai Havertz||45|Penalty saved by Robert Sánchez",
+          "status": "POSTED"
+        },
+        "401678123:HALF_TIME:1:45": {
+          "eventKey": "401678123:HALF_TIME:1:45",
+          "eventType": "HALF_TIME",
+          "facebookPostId": "mock-post-009",
+          "postedAt": "2026-09-15T14:35:52.040Z",
+          "lastContentSignature": "HALF_TIME|1-0|||45|",
+          "status": "POSTED"
+        },
+        "401678123:SECOND_HALF:2:46": {
+          "eventKey": "401678123:SECOND_HALF:2:46",
+          "eventType": "SECOND_HALF",
+          "facebookPostId": "mock-post-010",
+          "postedAt": "2026-09-15T14:35:52.560Z",
+          "lastContentSignature": "SECOND_HALF|1-0|||46|",
+          "status": "POSTED"
+        },
+        "401678123:GOAL:1:24:1-1": {
+          "eventKey": "401678123:GOAL:1:24:1-1",
+          "eventType": "GOAL",
+          "facebookPostId": "mock-post-011",
+          "postedAt": "2026-09-15T14:35:53.071Z",
+          "lastContentSignature": "GOAL|1-1|Bukayo Saka|Martin Ødegaard|24|",
+          "status": "POSTED"
+        },
+        "401678123:GOAL:1:88:1-1": {
+          "eventKey": "401678123:GOAL:1:88:1-1",
+          "eventType": "GOAL",
+          "facebookPostId": "mock-post-012",
+          "postedAt": "2026-09-15T14:35:53.072Z",
+          "lastContentSignature": "GOAL|1-1|Cole Palmer|Enzo Fernández|88|",
+          "status": "POSTED"
+        },
+        "401678123:FULL_TIME_PENDING_ET:2:90": {
+          "eventKey": "401678123:FULL_TIME_PENDING_ET:2:90",
+          "eventType": "FULL_TIME_PENDING_ET",
+          "facebookPostId": "mock-post-013",
+          "postedAt": "2026-09-15T14:35:53.590Z",
+          "lastContentSignature": "FULL_TIME_PENDING_ET|1-1|||90|",
+          "status": "POSTED"
+        },
+        "401678123:EXTRA_TIME_START:3:90": {
+          "eventKey": "401678123:EXTRA_TIME_START:3:90",
+          "eventType": "EXTRA_TIME_START",
+          "facebookPostId": "mock-post-014",
+          "postedAt": "2026-09-15T14:35:54.094Z",
+          "lastContentSignature": "EXTRA_TIME_START|1-1|||90|",
+          "status": "POSTED"
+        },
+        "401678123:EXTRA_TIME_HALF:4:105": {
+          "eventKey": "401678123:EXTRA_TIME_HALF:4:105",
+          "eventType": "EXTRA_TIME_HALF",
+          "facebookPostId": "mock-post-015",
+          "postedAt": "2026-09-15T14:35:54.605Z",
+          "lastContentSignature": "EXTRA_TIME_HALF|1-1|||105|",
+          "status": "POSTED"
+        },
+        "401678123:PENALTY_SHOOTOUT:5:120": {
+          "eventKey": "401678123:PENALTY_SHOOTOUT:5:120",
+          "eventType": "PENALTY_SHOOTOUT",
+          "facebookPostId": "mock-post-016",
+          "postedAt": "2026-09-15T14:35:55.111Z",
+          "lastContentSignature": "PENALTY_SHOOTOUT|1-1|||120|",
+          "status": "POSTED"
+        },
+        "401678123:FULL_TIME_POST_ET:3:120": {
+          "eventKey": "401678123:FULL_TIME_POST_ET:3:120",
+          "eventType": "FULL_TIME_POST_ET",
+          "facebookPostId": "mock-post-017",
+          "postedAt": "2026-09-15T14:35:55.625Z",
+          "lastContentSignature": "FULL_TIME_POST_ET|1-1|||120|",
+          "status": "POSTED"
+        }
+      },
       "lastStatus": "post",
       "lastPeriod": 5,
       "lastClock": "120+5'",
-      "lastUpdated": "2026-09-15T09:16:22.640Z"
-    },
-    "401912659": {
-      "fixtureId": "401912659",
-      "homeName": "Ratchaburi FC",
-      "awayName": "Shanghai Port",
-      "leagueName": "AFC Champions League Elite",
-      "leagueSlug": "afc.champions.east",
-      "lineupsPosted": true,
-      "lineupPostId": null,
-      "lastScore": {
-        "home": 1,
-        "away": 4
-      },
-      "postedEvents": [
-        "401912659:GOAL:51:0-3:wu lei",
-        "401912659:GOAL:51:0-4:wu lei",
-        "401912659:GOAL:71:1-4:njiva rakotoharimalala"
-      ],
-      "goalPosts": {
-        "51:0-3": {
-          "postId": "live-sim-post-1789470750292-498",
-          "scorer": "Wu Lei",
-          "assist": null
-        },
-        "51:0-4": {
-          "postId": "live-sim-post-1789470783221-873",
-          "scorer": "Wu Lei",
-          "assist": "Xin Yue"
-        },
-        "71:1-4": {
-          "postId": "232327123298533_122347537856204158",
-          "scorer": "Njiva Rakotoharimalala",
-          "assist": "Chotipat Poomkeaw"
-        }
-      },
-      "injuryEvents": [],
-      "lastStatus": "in",
-      "lastPeriod": 2,
-      "lastClock": "84'",
-      "lastUpdated": "2026-09-15T11:45:08.604Z"
-    },
-    "401912660": {
-      "fixtureId": "401912660",
-      "homeName": "Kashima Antlers",
-      "awayName": "Newcastle Jets",
-      "leagueName": "AFC Champions League Elite",
-      "leagueSlug": "afc.champions.east",
-      "lineupsPosted": true,
-      "lineupPostId": null,
-      "lastScore": {
-        "home": 7,
-        "away": 1
-      },
-      "postedEvents": [
-        "401912660:GOAL:56:6-0:homare tokuda",
-        "401912660:GOAL:73:6-0:kyosuke tagawa",
-        "401912660:GOAL:73:7-0:kyosuke tagawa",
-        "401912660:GOAL:79:7-1:patrick wood"
-      ],
-      "goalPosts": {
-        "56:6-0": {
-          "postId": "live-sim-post-1789470942502-619",
-          "scorer": "Homare Tokuda",
-          "assist": null
-        },
-        "73:6-0": {
-          "postId": "232327123298533_122347537748204158",
-          "scorer": "Kyosuke Tagawa",
-          "assist": "Haruki Hayashi"
-        },
-        "73:7-0": {
-          "postId": "232327123298533_122347537850204158",
-          "scorer": "Kyosuke Tagawa",
-          "assist": "Haruki Hayashi"
-        },
-        "79:7-1": {
-          "postId": "232327123298533_122347538678204158",
-          "scorer": "Patrick Wood",
-          "assist": "Joe Lolley"
-        }
-      },
-      "injuryEvents": [],
-      "lastStatus": "in",
-      "lastPeriod": 2,
-      "lastClock": "85'",
-      "lastUpdated": "2026-09-15T11:45:08.345Z"
-    },
-    "401912671": {
-      "fixtureId": "401912671",
-      "homeName": "Gamba Osaka",
-      "awayName": "Cong An Hanoi",
-      "leagueName": "AFC Champions League Elite",
-      "leagueSlug": "afc.champions.east",
-      "lineupsPosted": true,
-      "lineupPostId": null,
-      "lastScore": {
-        "home": 3,
-        "away": 1
-      },
-      "postedEvents": [
-        "401912671:GOAL:79:3-1:brayan perea"
-      ],
-      "goalPosts": {
-        "79:3-1": {
-          "postId": "232327123298533_122347538390204158",
-          "scorer": "Brayan Perea",
-          "assist": null
-        }
-      },
-      "injuryEvents": [],
-      "lastStatus": "in",
-      "lastPeriod": 2,
-      "lastClock": "87'",
-      "lastUpdated": "2026-09-15T11:45:08.109Z"
-    },
-    "401912672": {
-      "fixtureId": "401912672",
-      "homeName": "Daejeon Hana Citizen",
-      "awayName": "Kyoto Sanga",
-      "leagueName": "AFC Champions League Elite",
-      "leagueSlug": "afc.champions.east",
-      "lineupsPosted": true,
-      "lineupPostId": null,
-      "lastScore": {
-        "home": 0,
-        "away": 0
-      },
-      "postedEvents": [
-        "401912672:GOAL:49:1-0:gustav ludwigson"
-      ],
-      "goalPosts": {
-        "49:1-0": {
-          "postId": "live-sim-post-1789470581227-346",
-          "scorer": "Gustav Ludwigson",
-          "assist": "Kang Yoon-Seong"
-        }
-      },
-      "injuryEvents": [],
-      "lastStatus": "in",
-      "lastPeriod": 2,
-      "lastClock": "57'",
-      "lastUpdated": "2026-09-15T11:15:41.896Z"
+      "lastUpdated": "2026-09-15T14:35:55.626Z"
     }
   }
 }
