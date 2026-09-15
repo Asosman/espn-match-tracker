@@ -1,0 +1,904 @@
+// mock/sampleData.js
+
+export const MOCK_FIXTURE_ID = '401678123';
+
+export const MOCK_TEAMS = {
+  home: {
+    name: 'Arsenal',
+    id: '359',
+    abbreviation: 'ARS',
+  },
+  away: {
+    name: 'Chelsea',
+    id: '363',
+    abbreviation: 'CHE',
+  },
+  league: {
+    name: 'Premier League',
+    slug: 'eng.1',
+  },
+};
+
+export const MOCK_LINEUPS = {
+  home: [
+    'David Raya',
+    'Ben White',
+    'William Saliba',
+    'Gabriel Magalhães',
+    'Jurriën Timber',
+    'Thomas Partey',
+    'Declan Rice',
+    'Martin Ødegaard',
+    'Bukayo Saka',
+    'Kai Havertz',
+    'Gabriel Martinelli',
+  ],
+  away: [
+    'Robert Sánchez',
+    'Malo Gusto',
+    'Wesley Fofana',
+    'Levi Colwill',
+    'Marc Cucurella',
+    'Moisés Caicedo',
+    'Enzo Fernández',
+    'Noni Madueke',
+    'Cole Palmer',
+    'Pedro Neto',
+    'Nicolas Jackson',
+  ],
+};
+
+/**
+ * 15 sequential match states for simulating a complete football lifecycle in mock mode.
+ */
+export const MOCK_MATCH_LIFECYCLE = [
+  // 1. Pre-match — scheduled, no lineups, 0-0
+  {
+    step: 1,
+    title: 'Pre-match (Scheduled, no lineups)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'pre', description: 'Scheduled', clock: "0'", period: 0 },
+    score: { home: 0, away: 0 },
+    lineups: { home: [], away: [] },
+    events: [],
+  },
+
+  // 2. Lineups become available (still pre-kickoff, per Section 18.1)
+  {
+    step: 2,
+    title: 'Lineups announced (Pre-kickoff)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'pre', description: 'Scheduled', clock: "0'", period: 0 },
+    score: { home: 0, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [],
+  },
+
+  // 3. Kick-off — 0-0, period 1
+  {
+    step: 3,
+    title: 'Kick-off (1st Half underway)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'In Progress', clock: "1'", period: 1 },
+    score: { home: 0, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [],
+  },
+
+  // 4. Goal without a scorer — 1-0, scorer unavailable
+  {
+    step: 4,
+    title: 'Goal scored (Scorer temporarily unavailable)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'In Progress', clock: "24'", period: 1 },
+    score: { home: 1, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: null,
+        assist: null,
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+    ],
+  },
+
+  // 5. Scorer and assist arrive for that goal
+  {
+    step: 5,
+    title: 'Scorer & Assist resolved (Bukayo Saka, Martin Ødegaard)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'In Progress', clock: "25'", period: 1 },
+    score: { home: 1, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+    ],
+  },
+
+  // 6. Red card — player name included
+  {
+    step: 6,
+    title: 'Red card issued (Moisés Caicedo)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'In Progress', clock: "31'", period: 1 },
+    score: { home: 1, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+    ],
+  },
+
+  // 7. Injury — player name initially missing
+  {
+    step: 7,
+    title: 'Injury pause (Player name temporarily missing)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'In Progress', clock: "38'", period: 1 },
+    score: { home: 1, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: null,
+        description: 'Player down receiving medical treatment',
+      },
+    ],
+  },
+
+  // 8. Injury player name arrives
+  {
+    step: 8,
+    title: 'Injury player resolved (Gabriel Martinelli)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'In Progress', clock: "39'", period: 1 },
+    score: { home: 1, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+    ],
+  },
+
+  // 9. VAR / goal disallowed
+  {
+    step: 9,
+    title: 'VAR review: Goal disallowed (Offside)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'In Progress', clock: "42'", period: 1 },
+    score: { home: 1, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+    ],
+  },
+
+  // 10. Penalty awarded
+  {
+    step: 10,
+    title: 'Penalty awarded to Arsenal',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'In Progress', clock: "44'", period: 1 },
+    score: { home: 1, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+      {
+        type: 'PENALTY',
+        outcome: 'AWARDED',
+        minute: 44,
+        player: 'Kai Havertz',
+        text: 'Handball in the penalty box',
+      },
+    ],
+  },
+
+  // 11. Missed penalty
+  {
+    step: 11,
+    title: 'Penalty missed by Kai Havertz (Saved by keeper)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'In Progress', clock: "45'", period: 1 },
+    score: { home: 1, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+      {
+        type: 'MISSED_PENALTY',
+        minute: 45,
+        player: 'Kai Havertz',
+        text: 'Penalty saved by Robert Sánchez',
+      },
+    ],
+  },
+
+  // 12. Half-time — 1-0
+  {
+    step: 12,
+    title: 'Half-time reached (Arsenal 1 - 0 Chelsea)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'Halftime', clock: "45+2'", period: 1 },
+    score: { home: 1, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+      {
+        type: 'MISSED_PENALTY',
+        minute: 45,
+        player: 'Kai Havertz',
+        text: 'Penalty saved by Robert Sánchez',
+      },
+    ],
+  },
+
+  // 13. Second half begins
+  {
+    step: 13,
+    title: 'Second half kick-off',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'Second half', clock: "46'", period: 2 },
+    score: { home: 1, away: 0 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+      {
+        type: 'MISSED_PENALTY',
+        minute: 45,
+        player: 'Kai Havertz',
+        text: 'Penalty saved by Robert Sánchez',
+      },
+    ],
+  },
+
+  // 14. Additional goal (equalizer) — 1-1
+  {
+    step: 14,
+    title: 'Goal scored (Cole Palmer, 1-1 Equalizer)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'Second half', clock: "88'", period: 2 },
+    score: { home: 1, away: 1 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+      {
+        type: 'MISSED_PENALTY',
+        minute: 45,
+        player: 'Kai Havertz',
+        text: 'Penalty saved by Robert Sánchez',
+      },
+      {
+        type: 'GOAL',
+        minute: 88,
+        player: 'Cole Palmer',
+        assist: 'Enzo Fernández',
+        homeScore: 1,
+        awayScore: 1,
+        ownGoal: false,
+      },
+    ],
+  },
+
+  // 15. Full-time whistle in normal time (Arsenal 1 - 1 Chelsea)
+  {
+    step: 15,
+    title: 'Full-time whistle in normal time (Arsenal 1 - 1 Chelsea)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'Full Time', clock: "90+4'", period: 2 },
+    score: { home: 1, away: 1 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+      {
+        type: 'MISSED_PENALTY',
+        minute: 45,
+        player: 'Kai Havertz',
+        text: 'Penalty saved by Robert Sánchez',
+      },
+      {
+        type: 'GOAL',
+        minute: 88,
+        player: 'Cole Palmer',
+        assist: 'Enzo Fernández',
+        homeScore: 1,
+        awayScore: 1,
+        ownGoal: false,
+      },
+    ],
+  },
+
+  // 16. Extra Time begins
+  {
+    step: 16,
+    title: 'Extra Time begins',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'First Period of Extra Time', clock: "91'", period: 3 },
+    score: { home: 1, away: 1 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+      {
+        type: 'MISSED_PENALTY',
+        minute: 45,
+        player: 'Kai Havertz',
+        text: 'Penalty saved by Robert Sánchez',
+      },
+      {
+        type: 'GOAL',
+        minute: 88,
+        player: 'Cole Palmer',
+        assist: 'Enzo Fernández',
+        homeScore: 1,
+        awayScore: 1,
+        ownGoal: false,
+      },
+    ],
+  },
+
+  // 17. Extra Time Halftime
+  {
+    step: 17,
+    title: 'Extra Time Halftime',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'Extra Time Halftime', clock: "105'", period: 4 },
+    score: { home: 1, away: 1 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+      {
+        type: 'MISSED_PENALTY',
+        minute: 45,
+        player: 'Kai Havertz',
+        text: 'Penalty saved by Robert Sánchez',
+      },
+      {
+        type: 'GOAL',
+        minute: 88,
+        player: 'Cole Palmer',
+        assist: 'Enzo Fernández',
+        homeScore: 1,
+        awayScore: 1,
+        ownGoal: false,
+      },
+    ],
+  },
+
+  // 18. Penalty Shootout begins
+  {
+    step: 18,
+    title: 'Penalty Shootout begins',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'in', description: 'Penalty Shootout', clock: "120'", period: 5 },
+    score: { home: 1, away: 1 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+      {
+        type: 'MISSED_PENALTY',
+        minute: 45,
+        player: 'Kai Havertz',
+        text: 'Penalty saved by Robert Sánchez',
+      },
+      {
+        type: 'GOAL',
+        minute: 88,
+        player: 'Cole Palmer',
+        assist: 'Enzo Fernández',
+        homeScore: 1,
+        awayScore: 1,
+        ownGoal: false,
+      },
+    ],
+  },
+
+  // 19. Full-time whistle post-shootout
+  {
+    step: 19,
+    title: 'Full-time whistle post-shootout (Arsenal 1 - 1 Chelsea, Arsenal wins on Penalties)',
+    fixtureId: MOCK_FIXTURE_ID,
+    homeName: 'Arsenal',
+    awayName: 'Chelsea',
+    leagueName: 'Premier League',
+    leagueSlug: 'eng.1',
+    kickoff: new Date().toISOString(),
+    status: { state: 'post', description: 'Full Time (PEN)', clock: "120+5'", period: 5 },
+    score: { home: 1, away: 1 },
+    lineups: {
+      home: MOCK_LINEUPS.home,
+      away: MOCK_LINEUPS.away,
+    },
+    events: [
+      {
+        type: 'GOAL',
+        minute: 24,
+        player: 'Bukayo Saka',
+        assist: 'Martin Ødegaard',
+        homeScore: 1,
+        awayScore: 0,
+        ownGoal: false,
+      },
+      {
+        type: 'RED_CARD',
+        minute: 31,
+        player: 'Moisés Caicedo',
+        description: 'Violent conduct tackle',
+      },
+      {
+        type: 'INJURY',
+        minute: 38,
+        player: 'Gabriel Martinelli',
+        description: 'Ankle sprain after heavy challenge',
+      },
+      {
+        type: 'VAR',
+        minute: 42,
+        text: 'Goal disallowed for offside following VAR review',
+      },
+      {
+        type: 'MISSED_PENALTY',
+        minute: 45,
+        player: 'Kai Havertz',
+        text: 'Penalty saved by Robert Sánchez',
+      },
+      {
+        type: 'GOAL',
+        minute: 88,
+        player: 'Cole Palmer',
+        assist: 'Enzo Fernández',
+        homeScore: 1,
+        awayScore: 1,
+        ownGoal: false,
+      },
+    ],
+  },
+];

@@ -1,0 +1,6 @@
+{
+  "name": "ESPN Match Tracker & Facebook Live Publisher",
+  "description": "Real-time ESPN football match tracking and automated Facebook Live Publisher engine with West Africa Time (Africa/Lagos) date filtering, event detection, lineup pre-kickoff gating, and live monitoring.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,57 @@
+{
+  "matches": {
+    "401678123": {
+      "fixtureId": "401678123",
+      "homeName": "Arsenal",
+      "awayName": "Chelsea",
+      "leagueName": "Premier League",
+      "leagueSlug": "eng.1",
+      "lineupsPosted": true,
+      "lineupPostId": "mock-post-001",
+      "lastScore": {
+        "home": 1,
+        "away": 1
+      },
+      "postedEvents": [
+        "401678123:KICKOFF:0:0-0:all",
+        "401678123:GOAL:24:1-0:",
+        "401678123:RED_CARD:31:0-0:moisés caicedo",
+        "401678123:INJURY:38:0-0:",
+        "401678123:VAR:42:0-0:",
+        "401678123:PENALTY:44:0-0:kai havertz",
+        "401678123:MISSED_PENALTY:45:0-0:kai havertz",
+        "401678123:HALF_TIME:45:1-0:all",
+        "401678123:SECOND_HALF:46:1-0:all",
+        "401678123:GOAL:88:1-1:cole palmer",
+        "401678123:FULL_TIME_PENDING_ET:90:1-1:all",
+        "401678123:EXTRA_TIME_START:90:1-1:all",
+        "401678123:EXTRA_TIME_HALF:105:1-1:all",
+        "401678123:PENALTY_SHOOTOUT:120:1-1:all",
+        "401678123:FULL_TIME_POST_ET:120:1-1:all"
+      ],
+      "goalPosts": {
+        "24:1-0": {
+          "postId": "mock-post-003",
+          "scorer": "Bukayo Saka",
+          "assist": "Martin Ødegaard"
+        },
+        "88:1-1": {
+          "postId": "mock-post-011",
+          "scorer": "Cole Palmer",
+          "assist": "Enzo Fernández"
+        }
+      },
+      "injuryEvents": [
+        {
+          "minute": 38,
+          "player": "Gabriel Martinelli",
+          "postId": "mock-post-005"
+        }
+      ],
+      "lastStatus": "post",
+      "lastPeriod": 5,
+      "lastClock": "120+5'",
+      "lastUpdated": "2026-09-15T09:16:22.640Z"
+    }
+  }
+}
