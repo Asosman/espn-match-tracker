@@ -5,7 +5,7 @@ import db from './services/db.js';
 import realFacebook from './services/facebook.js';
 import mockFacebook from './mock/mockFacebookClient.js';
 import { fetchTodaysMatches } from './services/espn.js';
-import { formatFixturesPost, compareMatchState, formatEventPost, formatLineupPost } from './services/eventEngine.js';
+import { formatFixturesPost, compareMatchState, formatEventPost, formatLineupPost, isWhitelistedEvent } from './services/eventEngine.js';
 import { monitoringManager } from './services/monitoringManager.js';
 import { displayFixturesSummary, promptMainMenu, promptMatchSelection, promptMonitoringSubmenu, promptMatchDetailSelection, displayMatchDetails } from './cli/selector.js';
 import { formatDateDisplayWAT, getYesterdayDateIsoWAT } from './utils/time.js';
@@ -60,20 +60,20 @@ async function runMockSimulation() {
     const fixtureId = stepState.fixtureId;
     const prevRecord = await db.getMatchRecord(fixtureId);
 
-    const { newEvents, goalPostEdits, injuryPostEdits, lineupPostAction, eventStates: updatedEventStates } = compareMatchState(
-      prevRecord,
-      stepState
-    );
+    const {
+      newEvents,
+      goalPostEdits,
+      eventPostEdits,
+      lineupPostAction,
+      events: canonicalEvents,
+      facebookPosts: canonicalFacebookPosts,
+    } = compareMatchState(prevRecord, stepState);
 
-    const postedEventsSet = new Set(prevRecord?.postedEvents || []);
-    const goalPosts = { ...(prevRecord?.goalPosts || {}) };
-    const injuryEvents = [...(prevRecord?.injuryEvents || [])];
-    const eventStates = { ...(updatedEventStates || {}) };
     let lineupsPosted = Boolean(prevRecord?.lineupsPosted);
     let lineupPostId = prevRecord?.lineupPostId || null;
 
     // Lineup gating check
-    if (lineupPostAction === 'PUBLISH') {
+    if (lineupPostAction === 'PUBLISH' && !lineupsPosted) {
       const lineupMsg = formatLineupPost(stepState, stepState.lineups.home, stepState.lineups.away);
       lineupPostId = await mockFacebook.createPagePost(lineupMsg);
       lineupsPosted = true;
@@ -81,107 +81,144 @@ async function runMockSimulation() {
       console.log(`\n📢 [FACEBOOK LINEUPS POSTED]`);
       console.log(lineupMsg);
       console.log(`════════════════════════════════════════════════════`);
+
+      await db.saveMatchRecord(fixtureId, {
+        matchId: fixtureId,
+        fixtureId,
+        ...stepState,
+        lineupsPosted: true,
+        lineupPostId,
+        events: canonicalEvents,
+        facebookPosts: canonicalFacebookPosts,
+      });
     } else if (lineupPostAction === 'SKIP') {
       lineupsPosted = true;
       logger.info(`[MOCK LINEUP GATE] Match has already kicked off. Lineup card permanently skipped.`);
     }
 
-    // Process new events
+    // Persist pending events to DB before Facebook calls (Atomic state sequence)
+    if (newEvents.length > 0) {
+      await db.saveMatchRecord(fixtureId, {
+        matchId: fixtureId,
+        fixtureId,
+        homeName: stepState.homeName,
+        awayName: stepState.awayName,
+        homeTeam: stepState.homeName,
+        awayTeam: stepState.awayName,
+        leagueName: stepState.leagueName,
+        leagueSlug: stepState.leagueSlug,
+        lineupsPosted,
+        lineupPostId,
+        score: stepState.score,
+        lastScore: stepState.score,
+        status: stepState.status,
+        lastStatus: stepState.status.state,
+        lastPeriod: stepState.status.period,
+        lastClock: stepState.status.clock,
+        events: canonicalEvents,
+        facebookPosts: canonicalFacebookPosts,
+        eventStates: canonicalEvents,
+      });
+    }
+
+    // Process new events (strictly whitelisted)
     for (const ev of newEvents) {
+      if (!isWhitelistedEvent(ev)) continue;
+
+      // Duplicate pre-check
+      const existingPostId = canonicalEvents[ev.eventId]?.facebookPostId || prevRecord?.facebookPosts?.[ev.eventId]?.postId;
+      if (existingPostId) {
+        logger.warn(`[DUPLICATE PROTECTION] Facebook post already exists (${existingPostId}) for event ${ev.eventId}. Skipping.`);
+        continue;
+      }
+
       const postMsg = formatEventPost(ev, stepState);
       const postId = await mockFacebook.createPagePost(postMsg);
       
       if (postId) {
-        if (ev.sig) postedEventsSet.add(ev.sig);
-
-        eventStates[ev.eventKey] = {
-          eventKey: ev.eventKey,
-          eventType: ev.type,
+        canonicalEvents[ev.eventId] = {
+          ...canonicalEvents[ev.eventId],
           facebookPostId: postId,
+          status: 'VALID',
           postedAt: new Date().toISOString(),
-          lastContentSignature: ev.contentSignature || '',
-          status: 'POSTED'
         };
 
-        console.log(`\n⚡ [FACEBOOK EVENT POSTED: ${ev.type}]`);
+        canonicalFacebookPosts[postId] = {
+          postId,
+          eventId: ev.eventId,
+          type: ev.type,
+          createdAt: canonicalEvents[ev.eventId].postedAt,
+        };
+
+        console.log(`\n⚡ [FACEBOOK EVENT POSTED: ${ev.type}] (${ev.eventId})`);
         console.log(postMsg);
         console.log(`════════════════════════════════════════════════════`);
 
-        if (ev.type === 'GOAL' && ev.goalKey) {
-          goalPosts[ev.goalKey] = {
-            postId,
-            scorer: ev.player || null,
-            assist: ev.assist || null,
-          };
-        }
-        if (ev.type === 'INJURY') {
-          injuryEvents.push({
-            minute: ev.minute,
-            player: ev.player || null,
-            postId,
-          });
-        }
+        await db.recordFacebookPost(fixtureId, postId, ev.eventId, ev.type);
       }
     }
 
-    // Process goal edits (scorer/assist resolution)
-    for (const edit of goalPostEdits) {
+    // Process edits (scorer/assist resolution, red card player, disallowed goal)
+    const editsToApply = eventPostEdits?.length > 0 ? eventPostEdits : (goalPostEdits || []);
+    for (const edit of editsToApply) {
+      if (!edit.postId) continue;
+
       const updatedMsg = formatEventPost(edit.event, stepState);
       const success = await mockFacebook.updatePagePost(edit.postId, updatedMsg);
       
-      if (success) {
-        if (eventStates[edit.eventKey]) {
-          eventStates[edit.eventKey].lastContentSignature = edit.newContentSig;
+      if (success && edit.eventId && canonicalEvents[edit.eventId]) {
+        canonicalEvents[edit.eventId].lastContentSignature = edit.newContentSig;
+        if (edit.isDisallowed) {
+          canonicalEvents[edit.eventId].status = 'DISALLOWED';
         }
 
-        goalPosts[edit.goalKey] = {
-          postId: edit.postId,
-          scorer: edit.event.player || null,
-          assist: edit.event.assist || null,
+        console.log(`\n✏️ [FACEBOOK EVENT POST UPDATED: ${edit.event.type}] (${edit.eventId})`);
+        console.log(updatedMsg);
+        console.log(`════════════════════════════════════════════════════`);
+
+        await db.saveMatchEvent(fixtureId, edit.eventId, canonicalEvents[edit.eventId]);
+      }
+    }
+
+    // Persist final canonical state
+    const postedEventsList = Object.values(canonicalEvents)
+      .filter((e) => e.facebookPostId || e.status === 'VALID' || e.status === 'POSTED')
+      .map((e) => e.eventId);
+
+    const goalPostsMap = {};
+    for (const e of Object.values(canonicalEvents)) {
+      if ((e.type === 'GOAL' || e.type === 'PENALTY_SCORED' || e.type === 'OWN_GOAL') && e.facebookPostId) {
+        const key = e.goalKey || `${e.minute}:${e.scoreAfterEvent?.home}-${e.scoreAfterEvent?.away}`;
+        goalPostsMap[key] = {
+          postId: e.facebookPostId,
+          scorer: e.player || null,
+          assist: e.assist || null,
         };
-
-        console.log(`\n✏️ [FACEBOOK GOAL POST UPDATED]`);
-        console.log(updatedMsg);
-        console.log(`════════════════════════════════════════════════════`);
       }
     }
 
-    // Process injury edits
-    for (const edit of injuryPostEdits) {
-      const updatedMsg = formatEventPost(edit.event, stepState);
-      const success = await mockFacebook.updatePagePost(edit.postId, updatedMsg);
-      
-      if (success) {
-        if (eventStates[edit.eventKey]) {
-          eventStates[edit.eventKey].lastContentSignature = edit.newContentSig;
-        }
-
-        const inj = injuryEvents.find((i) => i.minute === edit.event.minute);
-        if (inj) inj.player = edit.event.player;
-
-        console.log(`\n✏️ [FACEBOOK INJURY POST UPDATED]`);
-        console.log(updatedMsg);
-        console.log(`════════════════════════════════════════════════════`);
-      }
-    }
-
-    // Persist to database
     await db.saveMatchRecord(fixtureId, {
+      matchId: fixtureId,
       fixtureId,
       homeName: stepState.homeName,
       awayName: stepState.awayName,
+      homeTeam: stepState.homeName,
+      awayTeam: stepState.awayName,
       leagueName: stepState.leagueName,
       leagueSlug: stepState.leagueSlug,
       lineupsPosted,
       lineupPostId,
+      score: stepState.score,
       lastScore: stepState.score,
-      postedEvents: Array.from(postedEventsSet),
-      goalPosts,
-      injuryEvents,
-      eventStates,
+      status: stepState.status,
       lastStatus: stepState.status.state,
       lastPeriod: stepState.status.period,
       lastClock: stepState.status.clock,
+      events: canonicalEvents,
+      facebookPosts: canonicalFacebookPosts,
+      eventStates: canonicalEvents,
+      postedEvents: postedEventsList,
+      goalPosts: goalPostsMap,
     });
 
     // Small delay between steps for readability

@@ -102,6 +102,12 @@ export function normalizeMatch(event, leagueSlugFallback = 'soccer') {
   const homeScore = parseInt(homeComp.score ?? '0', 10) || 0;
   const awayScore = parseInt(awayComp.score ?? '0', 10) || 0;
 
+  const homeShootout = homeComp.shootoutScore !== undefined ? parseInt(homeComp.shootoutScore, 10) : null;
+  const awayShootout = awayComp.shootoutScore !== undefined ? parseInt(awayComp.shootoutScore, 10) : null;
+  const shootout = (homeShootout !== null && awayShootout !== null && !isNaN(homeShootout) && !isNaN(awayShootout))
+    ? { home: homeShootout, away: awayShootout }
+    : null;
+
   const statusType = comp.status?.type || event.status?.type || {};
   const state = statusType.state || 'pre'; // 'pre', 'in', 'post'
 
@@ -169,6 +175,7 @@ export function normalizeMatch(event, leagueSlugFallback = 'soccer') {
       home: homeScore,
       away: awayScore,
     },
+    shootout,
     lineups: {
       home: [],
       away: [],
@@ -185,18 +192,20 @@ export function normalizeMatch(event, leagueSlugFallback = 'soccer') {
 
 /**
  * Creates a deterministic, stable signature for an event to prevent duplicate posts across polling cycles.
- * Format: {fixtureId}:{eventType}:{minute}:{homeScore}-{awayScore}:{player}
+ * Never includes match score as an identity.
  * @param {object} ev
  * @param {string} fixtureId
  * @returns {string}
  */
 export function eventSignature(ev, fixtureId) {
   const type = (ev.type || 'EVENT').toUpperCase();
+  if (ev.id) {
+    return `${fixtureId}:${type}:${ev.id}`;
+  }
   const minute = ev.minute !== undefined && ev.minute !== null ? ev.minute : (ev.clock || '0');
-  const home = ev.score?.home ?? ev.homeScore ?? 0;
-  const away = ev.score?.away ?? ev.awayScore ?? 0;
-  const player = (ev.player || ev.athlete || ev.playerName || '').trim().toLowerCase();
-  return `${fixtureId}:${type}:${minute}:${home}-${away}:${player}`;
+  const period = ev.period || 1;
+  const teamId = ev.teamId || '';
+  return `${fixtureId}:${type}:p${period}:m${minute}:t${teamId}`;
 }
 
 /**
@@ -456,6 +465,34 @@ export async function getMatchLineups(fixtureId, leagueSlug = 'eng.1', preloaded
 }
 
 /**
+ * Determines whether a raw item or play is from a post-match penalty shootout.
+ * Shootout kicks are tiebreakers and must NEVER be treated as match goals or in-game penalties.
+ * @param {any} item
+ * @returns {boolean}
+ */
+export function isShootoutEvent(item) {
+  if (!item) return false;
+  const play = item.play || {};
+  const periodNum = item.period?.number ?? play.period?.number ?? (typeof item.period === 'number' ? item.period : null) ?? (typeof play.period === 'number' ? play.period : null);
+  if (periodNum === 5) return true;
+
+  const periodType = String(item.period?.type || play.period?.type || item.period?.slug || play.period?.slug || '').toUpperCase();
+  if (periodType.includes('SHOOTOUT')) return true;
+
+  const typeText = String(item.type?.text || play.type?.text || item.type?.type || play.type?.type || '').toLowerCase();
+  if (typeText.includes('shootout')) return true;
+
+  const text = String(item.text || play.text || item.shortText || play.shortText || '').toLowerCase();
+  if (text.includes('penalty shootout') || text.includes('shootout')) return true;
+  if (item.shootoutPlay === true || item.isShootout === true || play.shootout === true) return true;
+
+  // ESPN shootout commentary scoreline pattern like "Barnsley 3(1)" or "3(1), Barnsley 3(2)" or "3(4)"
+  if (/\b\d+\s*\(\d+\)/.test(text)) return true;
+
+  return false;
+}
+
+/**
  * Normalizes an in-match event from ESPN keyEvents, commentary, or plays.
  * Handles goals, red cards, injuries, penalties, VAR, state transitions.
  * @param {any} item
@@ -464,6 +501,11 @@ export async function getMatchLineups(fixtureId, leagueSlug = 'eng.1', preloaded
  */
 function _normalizeEvent(item, matchContext = {}) {
   if (!item) return null;
+
+  // Penalty Shootout kicks are tiebreakers, NOT regular match goals or in-game penalties!
+  if (isShootoutEvent(item)) {
+    return null;
+  }
 
   const text = (item.text || item.alternativeText || '').trim();
   const lowerText = text.toLowerCase();
@@ -492,7 +534,8 @@ function _normalizeEvent(item, matchContext = {}) {
     }
   }
 
-  const teamId = String(item.team?.id || item.competitor?.id || '');
+  const teamId = String(item.team?.id || item.competitor?.id || item.teamId || '');
+  const teamName = String(item.team?.displayName || item.team?.name || item.competitor?.displayName || item.competitor?.name || '');
   const rawAthletes =
     item.athletesInvolved ||
     item.participants?.map((p) => p.athlete || p) ||
@@ -512,14 +555,28 @@ function _normalizeEvent(item, matchContext = {}) {
   let secondaryAthlete = getAthleteName(rawAthletes[1]);
 
   // 1. GOAL & DISALLOWED GOAL Detection
+  // 1. GOAL & DISALLOWED GOAL & OWN GOAL Detection
   if (
     item.scoringPlay === true ||
+    item.ownGoal === true ||
     typeText.includes('goal') ||
-    lowerText.includes('goal!') ||
-    lowerText.startsWith('goal') ||
-    lowerText.includes('goal disallowed')
+    typeText.includes('own') ||
+    typeText.includes('autogol') ||
+    lowerText.includes('goal') ||
+    lowerText.includes('own goal') ||
+    lowerText.includes('own-goal') ||
+    lowerText.includes('autogol') ||
+    lowerText.includes('gol en contra')
   ) {
-    const isOwnGoal = lowerText.includes('own goal') || typeText.includes('own goal');
+    const isOwnGoal =
+      item.ownGoal === true ||
+      lowerText.includes('own goal') ||
+      lowerText.includes('own-goal') ||
+      lowerText.includes('autogol') ||
+      lowerText.includes('gol en contra') ||
+      typeText.includes('own goal') ||
+      typeText.includes('own-goal') ||
+      typeText.includes('autogol');
     const isDisallowed =
       lowerText.includes('disallowed') ||
       lowerText.includes('overturned') ||
@@ -530,13 +587,28 @@ function _normalizeEvent(item, matchContext = {}) {
     let assist = secondaryAthlete || null;
 
     // Free text regex extraction if athletesInvolved was empty
+    if (!scorer && isOwnGoal) {
+      const ogMatch = text.match(/(?:Own\s*Goal\s+by|Autogol\s+de|Gol\s+en\s+contra\s+de)\s+([A-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ\s.'-]+?)(?:\s*\(|,|\.|$)/i);
+      if (ogMatch) {
+        scorer = ogMatch[1].trim();
+      }
+    }
     if (!scorer) {
-      const scorerMatch = text.match(/Goal!.*?([A-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ\s.-]+?)(?:\s+\(| scored|\.|$)/);
+      const scorerMatch = text.match(/(?:Goal!|Goal\s+).*?([A-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ\s.-]+?)(?:\s+\(| scored|\.|$)/);
       if (scorerMatch) {
         scorer = scorerMatch[1].trim();
       }
     }
-    if (!assist && lowerText.includes('assisted by')) {
+
+    let playerTeam = teamName;
+    if (isOwnGoal && text) {
+      const tmMatch = text.match(/(?:Own\s*Goal\s+by|Autogol\s+de|Gol\s+en\s+contra\s+de)\s+[A-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ\s.'-]+?(?:,|\()\s*([A-Za-zÀ-ÖØ-öø-ÿ\s.'-]+?)(?:\)|\.|$)/i);
+      if (tmMatch) {
+        playerTeam = tmMatch[1].trim();
+      }
+    }
+
+    if (!assist && !isOwnGoal && lowerText.includes('assisted by')) {
       const assistMatch = text.match(
         /assisted by\s+([A-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ\s.'-]+?)(?=\s+(?:with|following|after|through|from|via|on|\(|,|;|\.|$)|[.,;)]|$)/i
       );
@@ -549,33 +621,70 @@ function _normalizeEvent(item, matchContext = {}) {
       }
     }
 
+    let extractedHomeScore = item.homeScore !== undefined && item.homeScore !== null ? parseInt(item.homeScore, 10) : null;
+    let extractedAwayScore = item.awayScore !== undefined && item.awayScore !== null ? parseInt(item.awayScore, 10) : null;
+
+    // Parse score from text like "Goal! Platense 1, Fluminense 0." or "Own Goal by Sven Botman, Newcastle United. Manchester United 1, Newcastle United 0."
+    if (text) {
+      const p1 = text.match(/(?:Goal!.*?\b|Own\s*Goal.*?\b|\b)([A-Za-zÀ-ÖØ-öø-ÿ\s.'-]+?)\s+(\d+),\s*([A-Za-zÀ-ÖØ-öø-ÿ\s.'-]+?)\s+(\d+)/i);
+      if (p1) {
+        const t1 = p1[1].trim().toLowerCase();
+        const s1 = parseInt(p1[2], 10);
+        const t2 = p1[3].trim().toLowerCase();
+        const s2 = parseInt(p1[4], 10);
+        const hName = (matchContext.homeName || '').toLowerCase().trim();
+        const aName = (matchContext.awayName || '').toLowerCase().trim();
+        if (hName && (t1.includes(hName) || hName.includes(t1))) {
+          extractedHomeScore = s1;
+          extractedAwayScore = s2;
+        } else if (aName && (t1.includes(aName) || aName.includes(t1))) {
+          extractedHomeScore = s2;
+          extractedAwayScore = s1;
+        } else {
+          extractedHomeScore = s1;
+          extractedAwayScore = s2;
+        }
+      } else if (extractedHomeScore === null || (extractedHomeScore === 0 && extractedAwayScore === 0)) {
+        const p2 = text.match(/(\d+)\s*[-–]\s*(\d+)/);
+        if (p2) {
+          extractedHomeScore = parseInt(p2[1], 10);
+          extractedAwayScore = parseInt(p2[2], 10);
+        }
+      }
+    }
+
     if (isDisallowed) {
       return {
         type: 'GOAL_DISALLOWED',
         teamId,
+        teamName,
         player: scorer || null,
         assist: assist || null,
         minute: minute || 0,
         stoppageTime,
         period: item.period?.number || 1,
-        homeScore: item.homeScore ?? matchContext.score?.home ?? 0,
-        awayScore: item.awayScore ?? matchContext.score?.away ?? 0,
+        homeScore: extractedHomeScore,
+        awayScore: extractedAwayScore,
         disallowed: true,
         reason: text,
         text,
       };
     }
 
+    const hasValidScore = extractedHomeScore !== null && extractedAwayScore !== null && (extractedHomeScore > 0 || extractedAwayScore > 0);
+
     return {
-      type: 'GOAL',
+      type: isOwnGoal ? 'OWN_GOAL' : 'GOAL',
       teamId,
+      teamName: playerTeam || teamName,
       player: scorer || null,
-      assist: assist || null,
+      assist: isOwnGoal ? null : (assist || null),
       minute: minute || 0,
       stoppageTime,
       period: item.period?.number || 1,
-      homeScore: item.homeScore ?? matchContext.score?.home ?? 0,
-      awayScore: item.awayScore ?? matchContext.score?.away ?? 0,
+      homeScore: extractedHomeScore,
+      awayScore: extractedAwayScore,
+      scoreAfterEvent: hasValidScore ? { home: extractedHomeScore, away: extractedAwayScore } : null,
       ownGoal: isOwnGoal,
       disallowed: false,
       text,
@@ -608,26 +717,7 @@ function _normalizeEvent(item, matchContext = {}) {
     };
   }
 
-  // 3. INJURY Detection
-  if (lowerText.includes('injury') || lowerText.includes('injured') || lowerText.includes('stretchered off')) {
-    let player = primaryAthlete;
-    if (!player) {
-      const injMatch = text.match(/([A-Z][a-zA-Z\s.-]+?)\s+(?:is injured|suffers an injury|stretchered)/i);
-      if (injMatch) player = injMatch[1].trim();
-    }
-
-    return {
-      type: 'INJURY',
-      player: player || null,
-      teamId,
-      minute: minute || 0,
-      period: item.period?.number || 1,
-      description: text,
-      text,
-    };
-  }
-
-  // 4. PENALTIES Detection (Scored / Missed)
+  // 3. PENALTIES Detection (Only whitelisted PENALTY SCORED is permitted)
   if (item.penaltyKick === true || typeText.includes('penalty') || lowerText.includes('penalty')) {
     const isScored =
       lowerText.includes('scores') ||
@@ -635,63 +725,74 @@ function _normalizeEvent(item, matchContext = {}) {
       lowerText.includes('converts penalty') ||
       typeText.includes('scored') ||
       item.scoringPlay === true;
-    const isMissed =
-      lowerText.includes('missed') ||
-      lowerText.includes('saved') ||
-      lowerText.includes('hit the post') ||
-      lowerText.includes('over the bar') ||
-      typeText.includes('missed');
-
-    let player = primaryAthlete;
-    if (!player) {
-      const penMatch = text.match(/penalty (?:taken by|scored by|missed by|saved by) ([A-Z][a-zA-Z\s.-]+?)(?:\.|$)/i);
-      if (penMatch) player = penMatch[1].trim();
-    }
-
-    if (isMissed) {
-      return {
-        type: 'PENALTY_MISSED',
-        outcome: 'MISSED',
-        player: player || null,
-        teamId,
-        minute: minute || 0,
-        period: item.period?.number || 1,
-        text,
-      };
-    }
 
     if (isScored) {
+      let player = primaryAthlete;
+      if (!player) {
+        const penMatch = text.match(/penalty (?:taken by|scored by) ([A-Z][a-zA-Z\s.-]+?)(?:\.|$)/i);
+        if (penMatch) player = penMatch[1].trim();
+      }
+
+      let extractedHomeScore = item.homeScore !== undefined && item.homeScore !== null ? parseInt(item.homeScore, 10) : null;
+      let extractedAwayScore = item.awayScore !== undefined && item.awayScore !== null ? parseInt(item.awayScore, 10) : null;
+
+      if ((extractedHomeScore === null || (extractedHomeScore === 0 && extractedAwayScore === 0)) && text) {
+        const p1 = text.match(/\b([A-Za-zÀ-ÖØ-öø-ÿ\s.'-]+?)\s+(\d+),\s*([A-Za-zÀ-ÖØ-öø-ÿ\s.'-]+?)\s+(\d+)/i);
+        if (p1) {
+          const t1 = p1[1].trim().toLowerCase();
+          const s1 = parseInt(p1[2], 10);
+          const t2 = p1[3].trim().toLowerCase();
+          const s2 = parseInt(p1[4], 10);
+          const hName = (matchContext.homeName || '').toLowerCase().trim();
+          const aName = (matchContext.awayName || '').toLowerCase().trim();
+          if (hName && (t1.includes(hName) || hName.includes(t1))) {
+            extractedHomeScore = s1;
+            extractedAwayScore = s2;
+          } else if (aName && (t1.includes(aName) || aName.includes(t1))) {
+            extractedHomeScore = s2;
+            extractedAwayScore = s1;
+          } else {
+            extractedHomeScore = s1;
+            extractedAwayScore = s2;
+          }
+        } else {
+          const p2 = text.match(/(\d+)\s*[-–]\s*(\d+)/);
+          if (p2) {
+            extractedHomeScore = parseInt(p2[1], 10);
+            extractedAwayScore = parseInt(p2[2], 10);
+          }
+        }
+      }
+
+      const hasValidScore = extractedHomeScore !== null && extractedAwayScore !== null && (extractedHomeScore > 0 || extractedAwayScore > 0);
+
       return {
         type: 'PENALTY_SCORED',
         outcome: 'SCORED',
         player: player || null,
         teamId,
+        teamName,
         minute: minute || 0,
         period: item.period?.number || 1,
+        homeScore: extractedHomeScore,
+        awayScore: extractedAwayScore,
+        scoreAfterEvent: hasValidScore ? { home: extractedHomeScore, away: extractedAwayScore } : null,
         text,
       };
     }
 
-    // Penalty Awarded
-    return {
-      type: 'PENALTY',
-      outcome: 'AWARDED',
-      player: player || null,
-      teamId,
-      minute: minute || 0,
-      period: item.period?.number || 1,
-      text,
-    };
+    // Missed penalties, saved penalties, or penalty awarded are strictly ignored per whitelist
+    return null;
   }
 
-  // 5. HALFTIME & FULLTIME Detection
+  // 4. HALFTIME & FULLTIME Detection
   if (
     typeText.includes('halftime') ||
     lowerText.includes('half time') ||
     lowerText.includes('half-time')
   ) {
     return {
-      type: 'HALFTIME',
+      type: 'HALF_TIME',
       minute: minute || 45,
       period: 1,
       homeScore: item.homeScore ?? matchContext.score?.home ?? 0,
@@ -707,7 +808,7 @@ function _normalizeEvent(item, matchContext = {}) {
     lowerText.includes('full-time')
   ) {
     return {
-      type: 'FULLTIME',
+      type: 'FULL_TIME',
       minute: minute || 90,
       period: 2,
       homeScore: item.homeScore ?? matchContext.score?.home ?? 0,
@@ -716,14 +817,29 @@ function _normalizeEvent(item, matchContext = {}) {
     };
   }
 
-  // 6. VAR Detection
+  // 5. VAR Detection (Only allowed if directly resulting in a disallowed goal)
   if (typeText.includes('var') || lowerText.includes('var decision') || lowerText.includes('var:')) {
-    return {
-      type: 'VAR',
-      text,
-      minute: minute || 0,
-      period: item.period?.number || 1,
-    };
+    const isDisallowed =
+      lowerText.includes('disallowed') ||
+      lowerText.includes('overturned') ||
+      lowerText.includes('no goal');
+
+    if (isDisallowed) {
+      return {
+        type: 'GOAL_DISALLOWED',
+        teamId,
+        player: primaryAthlete || null,
+        minute: minute || 0,
+        period: item.period?.number || 1,
+        homeScore: item.homeScore !== undefined ? item.homeScore : null,
+        awayScore: item.awayScore !== undefined ? item.awayScore : null,
+        reason: text,
+        text,
+      };
+    }
+
+    // General VAR checks/reviews are ignored per whitelist
+    return null;
   }
 
   return null;
@@ -802,6 +918,39 @@ export async function fetchMatchDetails(fixtureId, leagueSlug = 'eng.1', existin
     const awayComp = competitors.find((c) => c.homeAway === 'away') || competitors[1];
     if (homeComp?.score !== undefined) normalized.score.home = parseInt(homeComp.score, 10) || 0;
     if (awayComp?.score !== undefined) normalized.score.away = parseInt(awayComp.score, 10) || 0;
+
+    if (homeComp) {
+      normalized.homeId = String(homeComp.id || homeComp.team?.id || normalized.homeId || '');
+      if (homeComp.team?.displayName || homeComp.team?.name) {
+        normalized.homeName = homeComp.team.displayName || homeComp.team.name;
+      }
+    }
+    if (awayComp) {
+      normalized.awayId = String(awayComp.id || awayComp.team?.id || normalized.awayId || '');
+      if (awayComp.team?.displayName || awayComp.team?.name) {
+        normalized.awayName = awayComp.team.displayName || awayComp.team.name;
+      }
+    }
+
+    const homeShootout = homeComp?.shootoutScore !== undefined ? parseInt(homeComp.shootoutScore, 10) : null;
+    const awayShootout = awayComp?.shootoutScore !== undefined ? parseInt(awayComp.shootoutScore, 10) : null;
+    if (homeShootout !== null && awayShootout !== null && !isNaN(homeShootout) && !isNaN(awayShootout)) {
+      normalized.shootout = { home: homeShootout, away: awayShootout };
+    }
+  }
+
+  // Fallback: extract shootout score from summary.shootout if not present on competitors
+  if (!normalized.shootout && summary?.shootout?.length >= 2) {
+    const t1 = summary.shootout[0];
+    const t2 = summary.shootout[1];
+    const s1 = t1.shots?.filter((s) => s.didScore).length || 0;
+    const s2 = t2.shots?.filter((s) => s.didScore).length || 0;
+    const hId = String(normalized.homeId || '');
+    if (String(t1.id) === hId || (t1.team && normalized.homeName && t1.team.toLowerCase().includes(normalized.homeName.toLowerCase()))) {
+      normalized.shootout = { home: s1, away: s2 };
+    } else {
+      normalized.shootout = { home: s2, away: s1 };
+    }
   }
 
   // Lineups Resolution
@@ -817,25 +966,39 @@ export async function fetchMatchDetails(fixtureId, leagueSlug = 'eng.1', existin
   const extractedEvents = [];
 
   for (const item of keyEvents) {
+    if (isShootoutEvent(item)) continue;
     const parsed = normalizeEvent(item, normalized);
     if (parsed) {
       extractedEvents.push(parsed);
     }
   }
 
-  // Check commentary to enrich assists and capture goals
+  // Check commentary to enrich assists and capture goals, own goals, or other whitelisted events
   if (summary?.commentary?.length > 0) {
     for (const com of summary.commentary) {
-      const isGoal = com.play?.type?.text === 'Goal' || (com.text && com.text.toLowerCase().includes('goal!'));
+      if (isShootoutEvent(com)) continue;
+      const isGoal =
+        com.play?.type?.text === 'Goal' ||
+        com.play?.type?.text === 'Own Goal' ||
+        (com.text && (
+          com.text.toLowerCase().includes('goal!') ||
+          com.text.toLowerCase().includes('own goal') ||
+          com.text.toLowerCase().includes('autogol')
+        ));
       if (isGoal) {
         const parsed = normalizeEvent(com, normalized);
         if (parsed) {
           const existing = extractedEvents.find(
-            (e) => e.type === 'GOAL' && (e.minute === parsed.minute || (e.player && parsed.player && e.player.toLowerCase() === parsed.player.toLowerCase()))
+            (e) => (e.type === 'GOAL' || e.type === 'OWN_GOAL' || e.type === 'PENALTY_SCORED') &&
+                   (e.minute === parsed.minute || (e.player && parsed.player && e.player.toLowerCase() === parsed.player.toLowerCase()))
           );
           if (existing) {
             if (!existing.assist && parsed.assist) {
               existing.assist = parsed.assist;
+            }
+            if (!existing.ownGoal && parsed.ownGoal) {
+              existing.ownGoal = true;
+              existing.type = 'OWN_GOAL';
             }
           } else {
             extractedEvents.push(parsed);
@@ -844,12 +1007,12 @@ export async function fetchMatchDetails(fixtureId, leagueSlug = 'eng.1', existin
       }
     }
 
-    // Always scan commentary for other non-goal events (e.g. INJURY, VAR, PENALTY, RED_CARD)
-    // that might not be in keyEvents but exist in the commentary stream.
+    // Scan commentary for other allowed events (e.g. RED_CARD, GOAL_DISALLOWED, PENALTY_SCORED)
     for (const com of summary.commentary) {
+      if (isShootoutEvent(com)) continue;
       const parsed = normalizeEvent(com, normalized);
       if (parsed) {
-        if (parsed.type === 'GOAL') continue; // Goals are already handled above
+        if (parsed.type === 'GOAL' || parsed.type === 'OWN_GOAL') continue; // Goals & Own goals already handled above
 
         const isDuplicate = extractedEvents.some(
           (e) => e.type === parsed.type && e.minute === parsed.minute
@@ -857,16 +1020,6 @@ export async function fetchMatchDetails(fixtureId, leagueSlug = 'eng.1', existin
 
         if (!isDuplicate) {
           extractedEvents.push(parsed);
-        } else if (parsed.type === 'INJURY') {
-          // If the injury exists, but now has resolved player information, enrich it in place
-          const existing = extractedEvents.find(
-            (e) => e.type === 'INJURY' && e.minute === parsed.minute
-          );
-          if (existing && !existing.player && parsed.player) {
-            existing.player = parsed.player;
-            existing.description = parsed.description;
-            existing.text = parsed.text;
-          }
         }
       }
     }

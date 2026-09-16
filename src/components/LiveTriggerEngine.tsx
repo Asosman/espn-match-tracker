@@ -303,8 +303,12 @@ export const LiveTriggerEngine: React.FC<LiveTriggerEngineProps> = ({ matchData 
                   {currentSimulatedEvent.type?.text}
                 </span>
                 {currentSimulatedEvent.scoringPlay && (
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-700">
-                    GOAL
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    (currentSimulatedEvent.ownGoal || currentSimulatedEvent.text?.toLowerCase().includes('own goal'))
+                      ? 'bg-amber-950 text-amber-300 border border-amber-700'
+                      : 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                  }`}>
+                    {(currentSimulatedEvent.ownGoal || currentSimulatedEvent.text?.toLowerCase().includes('own goal')) ? 'OWN GOAL' : 'GOAL'}
                   </span>
                 )}
                 {currentSimulatedEvent.redCard && (

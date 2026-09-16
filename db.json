@@ -13,22 +13,14 @@
         "away": 1
       },
       "postedEvents": [
-        "401678123:KICKOFF:1:1",
+        "401678123:KICKOFF",
         "401678123:GOAL:1:24:1-0",
-        "401678123:RED_CARD:1:31",
-        "401678123:INJURY:1:38",
-        "401678123:VAR:1:42",
-        "401678123:PENALTY:1:44",
-        "401678123:MISSED_PENALTY:1:45",
-        "401678123:HALF_TIME:1:45",
-        "401678123:SECOND_HALF:2:46",
-        "401678123:GOAL:1:24:1-1",
+        "401678123:RED_CARD:31:moisés caicedo",
+        "401678123:GOAL_DISALLOWED:42:",
+        "401678123:HALF_TIME",
         "401678123:GOAL:1:88:1-1",
-        "401678123:FULL_TIME_PENDING_ET:2:90",
-        "401678123:EXTRA_TIME_START:3:90",
-        "401678123:EXTRA_TIME_HALF:4:105",
-        "401678123:PENALTY_SHOOTOUT:5:120",
-        "401678123:FULL_TIME_POST_ET:3:120"
+        "401678123:EXTRA_TIME",
+        "401678123:AFTER_EXTRA_TIME_OR_SHOOTOUT"
       ],
       "goalPosts": {
         "24:1-0": {
@@ -36,30 +28,19 @@
           "scorer": "Bukayo Saka",
           "assist": "Martin Ødegaard"
         },
-        "24:1-1": {
-          "postId": "mock-post-011",
-          "scorer": "Bukayo Saka",
-          "assist": "Martin Ødegaard"
-        },
         "88:1-1": {
-          "postId": "mock-post-012",
+          "postId": "mock-post-007",
           "scorer": "Cole Palmer",
           "assist": "Enzo Fernández"
         }
       },
-      "injuryEvents": [
-        {
-          "minute": 38,
-          "player": "Gabriel Martinelli",
-          "postId": "mock-post-005"
-        }
-      ],
+      "injuryEvents": [],
       "eventStates": {
-        "401678123:KICKOFF:1:1": {
-          "eventKey": "401678123:KICKOFF:1:1",
+        "401678123:KICKOFF": {
+          "eventKey": "401678123:KICKOFF",
           "eventType": "KICKOFF",
           "facebookPostId": "mock-post-002",
-          "postedAt": "2026-09-15T14:35:47.412Z",
+          "postedAt": "2026-09-15T21:24:51.385Z",
           "lastContentSignature": "KICKOFF|0-0|||1|",
           "status": "POSTED"
         },
@@ -67,127 +48,845 @@
           "eventKey": "401678123:GOAL:1:24:1-0",
           "eventType": "GOAL",
           "facebookPostId": "mock-post-003",
-          "postedAt": "2026-09-15T14:35:47.919Z",
+          "postedAt": "2026-09-15T21:24:51.889Z",
           "lastContentSignature": "GOAL|1-0|Bukayo Saka|Martin Ødegaard|24|",
           "status": "POSTED"
         },
-        "401678123:RED_CARD:1:31": {
-          "eventKey": "401678123:RED_CARD:1:31",
+        "401678123:RED_CARD:31:moisés caicedo": {
+          "eventKey": "401678123:RED_CARD:31:moisés caicedo",
           "eventType": "RED_CARD",
           "facebookPostId": "mock-post-004",
-          "postedAt": "2026-09-15T14:35:48.941Z",
+          "postedAt": "2026-09-15T21:24:52.897Z",
           "lastContentSignature": "RED_CARD|-|Moisés Caicedo||31|Violent conduct tackle",
           "status": "POSTED"
         },
-        "401678123:INJURY:1:38": {
-          "eventKey": "401678123:INJURY:1:38",
-          "eventType": "INJURY",
+        "401678123:GOAL_DISALLOWED:42:": {
+          "eventKey": "401678123:GOAL_DISALLOWED:42:",
+          "eventType": "GOAL_DISALLOWED",
           "facebookPostId": "mock-post-005",
-          "postedAt": "2026-09-15T14:35:49.459Z",
-          "lastContentSignature": "INJURY|-|Gabriel Martinelli||38|Ankle sprain after heavy challenge",
+          "postedAt": "2026-09-15T21:24:54.407Z",
+          "lastContentSignature": "GOAL_DISALLOWED|-|||42|Goal disallowed for offside following VAR review",
           "status": "POSTED"
         },
-        "401678123:VAR:1:42": {
-          "eventKey": "401678123:VAR:1:42",
-          "eventType": "VAR",
-          "facebookPostId": "mock-post-006",
-          "postedAt": "2026-09-15T14:35:50.489Z",
-          "lastContentSignature": "VAR|-|||42|Goal disallowed for offside following VAR review",
-          "status": "POSTED"
-        },
-        "401678123:PENALTY:1:44": {
-          "eventKey": "401678123:PENALTY:1:44",
-          "eventType": "PENALTY",
-          "facebookPostId": "mock-post-007",
-          "postedAt": "2026-09-15T14:35:51.006Z",
-          "lastContentSignature": "PENALTY|-|Kai Havertz||44|Handball in the penalty box",
-          "status": "POSTED"
-        },
-        "401678123:MISSED_PENALTY:1:45": {
-          "eventKey": "401678123:MISSED_PENALTY:1:45",
-          "eventType": "MISSED_PENALTY",
-          "facebookPostId": "mock-post-008",
-          "postedAt": "2026-09-15T14:35:51.524Z",
-          "lastContentSignature": "MISSED_PENALTY|-|Kai Havertz||45|Penalty saved by Robert Sánchez",
-          "status": "POSTED"
-        },
-        "401678123:HALF_TIME:1:45": {
-          "eventKey": "401678123:HALF_TIME:1:45",
+        "401678123:HALF_TIME": {
+          "eventKey": "401678123:HALF_TIME",
           "eventType": "HALF_TIME",
-          "facebookPostId": "mock-post-009",
-          "postedAt": "2026-09-15T14:35:52.040Z",
+          "facebookPostId": "mock-post-006",
+          "postedAt": "2026-09-15T21:24:55.916Z",
           "lastContentSignature": "HALF_TIME|1-0|||45|",
-          "status": "POSTED"
-        },
-        "401678123:SECOND_HALF:2:46": {
-          "eventKey": "401678123:SECOND_HALF:2:46",
-          "eventType": "SECOND_HALF",
-          "facebookPostId": "mock-post-010",
-          "postedAt": "2026-09-15T14:35:52.560Z",
-          "lastContentSignature": "SECOND_HALF|1-0|||46|",
-          "status": "POSTED"
-        },
-        "401678123:GOAL:1:24:1-1": {
-          "eventKey": "401678123:GOAL:1:24:1-1",
-          "eventType": "GOAL",
-          "facebookPostId": "mock-post-011",
-          "postedAt": "2026-09-15T14:35:53.071Z",
-          "lastContentSignature": "GOAL|1-1|Bukayo Saka|Martin Ødegaard|24|",
           "status": "POSTED"
         },
         "401678123:GOAL:1:88:1-1": {
           "eventKey": "401678123:GOAL:1:88:1-1",
           "eventType": "GOAL",
-          "facebookPostId": "mock-post-012",
-          "postedAt": "2026-09-15T14:35:53.072Z",
+          "facebookPostId": "mock-post-007",
+          "postedAt": "2026-09-15T21:24:56.924Z",
           "lastContentSignature": "GOAL|1-1|Cole Palmer|Enzo Fernández|88|",
           "status": "POSTED"
         },
-        "401678123:FULL_TIME_PENDING_ET:2:90": {
-          "eventKey": "401678123:FULL_TIME_PENDING_ET:2:90",
-          "eventType": "FULL_TIME_PENDING_ET",
-          "facebookPostId": "mock-post-013",
-          "postedAt": "2026-09-15T14:35:53.590Z",
-          "lastContentSignature": "FULL_TIME_PENDING_ET|1-1|||90|",
+        "401678123:EXTRA_TIME": {
+          "eventKey": "401678123:EXTRA_TIME",
+          "eventType": "EXTRA_TIME",
+          "facebookPostId": "mock-post-008",
+          "postedAt": "2026-09-15T21:24:57.930Z",
+          "lastContentSignature": "EXTRA_TIME|1-1|||90|",
           "status": "POSTED"
         },
-        "401678123:EXTRA_TIME_START:3:90": {
-          "eventKey": "401678123:EXTRA_TIME_START:3:90",
-          "eventType": "EXTRA_TIME_START",
-          "facebookPostId": "mock-post-014",
-          "postedAt": "2026-09-15T14:35:54.094Z",
-          "lastContentSignature": "EXTRA_TIME_START|1-1|||90|",
-          "status": "POSTED"
-        },
-        "401678123:EXTRA_TIME_HALF:4:105": {
-          "eventKey": "401678123:EXTRA_TIME_HALF:4:105",
-          "eventType": "EXTRA_TIME_HALF",
-          "facebookPostId": "mock-post-015",
-          "postedAt": "2026-09-15T14:35:54.605Z",
-          "lastContentSignature": "EXTRA_TIME_HALF|1-1|||105|",
-          "status": "POSTED"
-        },
-        "401678123:PENALTY_SHOOTOUT:5:120": {
-          "eventKey": "401678123:PENALTY_SHOOTOUT:5:120",
-          "eventType": "PENALTY_SHOOTOUT",
-          "facebookPostId": "mock-post-016",
-          "postedAt": "2026-09-15T14:35:55.111Z",
-          "lastContentSignature": "PENALTY_SHOOTOUT|1-1|||120|",
-          "status": "POSTED"
-        },
-        "401678123:FULL_TIME_POST_ET:3:120": {
-          "eventKey": "401678123:FULL_TIME_POST_ET:3:120",
-          "eventType": "FULL_TIME_POST_ET",
-          "facebookPostId": "mock-post-017",
-          "postedAt": "2026-09-15T14:35:55.625Z",
-          "lastContentSignature": "FULL_TIME_POST_ET|1-1|||120|",
+        "401678123:AFTER_EXTRA_TIME_OR_SHOOTOUT": {
+          "eventKey": "401678123:AFTER_EXTRA_TIME_OR_SHOOTOUT",
+          "eventType": "AFTER_EXTRA_TIME_OR_SHOOTOUT",
+          "facebookPostId": "mock-post-009",
+          "postedAt": "2026-09-15T21:24:59.439Z",
+          "lastContentSignature": "AFTER_EXTRA_TIME_OR_SHOOTOUT|1-1|||120|",
           "status": "POSTED"
         }
       },
       "lastStatus": "post",
       "lastPeriod": 5,
       "lastClock": "120+5'",
-      "lastUpdated": "2026-09-15T14:35:55.626Z"
+      "lastUpdated": "2026-09-15T21:24:59.439Z"
+    },
+    "401912654": {
+      "fixtureId": "401912654",
+      "uid": "s:600~l:3902~e:401912654",
+      "homeName": "Port FC",
+      "awayName": "Vissel Kobe",
+      "homeId": "17757",
+      "awayId": "7477",
+      "homeLogo": "",
+      "awayLogo": "",
+      "homeAbbreviation": "PORT",
+      "awayAbbreviation": "VIS",
+      "leagueName": "AFC Champions League Elite",
+      "leagueSlug": "afc.champions.east",
+      "kickoff": "2026-09-16T12:15Z",
+      "kickoffFormattedWAT": "13:15",
+      "venue": "",
+      "status": {
+        "state": "in",
+        "period": 2,
+        "clock": "80'",
+        "description": "",
+        "detail": "",
+        "name": "STATUS_SECOND_HALF"
+      },
+      "score": {
+        "home": 1,
+        "away": 2
+      },
+      "shootout": null,
+      "lineups": {
+        "home": [
+          "Michael Falkesgaard",
+          "Peerawat Akkratum",
+          "Matheus Lins",
+          "Marcel Philipe Afonso Genestra Scalese",
+          "Manuel Bihr",
+          "Lucas Tocantins",
+          "Shimura Noboru",
+          "Peeradol Chamrasamee",
+          "Bruno Moreira",
+          "Issam Al Sabhi",
+          "Kaká"
+        ],
+        "away": [
+          "Shuichi Gonda",
+          "Issei Takahashi",
+          "Caetano",
+          "Diego",
+          "Tetsushi Yamakawa",
+          "Gotoku Sakai",
+          "Yosuke Ideguchi",
+          "Yuta Goke",
+          "Katsuya Nagato",
+          "Nanasei Iino",
+          "Ren Komatsu"
+        ]
+      },
+      "lineupsAvailable": true,
+      "events": {
+        "401912654:KICKOFF": {
+          "eventId": "401912654:KICKOFF",
+          "eventKey": "401912654:KICKOFF",
+          "rawId": null,
+          "type": "KICKOFF",
+          "minute": 1,
+          "period": 1,
+          "teamId": "all",
+          "player": null,
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 0,
+            "away": 0
+          },
+          "homeScore": 0,
+          "awayScore": 0,
+          "ownGoal": false,
+          "isSecondYellow": false,
+          "description": "",
+          "text": "",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347806890204158",
+          "postedAt": "2026-09-16T12:16:33.911Z",
+          "occurrenceTime": "2026-09-16T12:15Z",
+          "goalKey": null,
+          "lastContentSignature": "KICKOFF|0-0|||1|PENDING|"
+        },
+        "401912654:GOAL:52495892": {
+          "eventId": "401912654:GOAL:52495892",
+          "eventKey": "401912654:GOAL:52495892",
+          "rawId": "52495892",
+          "type": "OWN_GOAL",
+          "minute": 10,
+          "period": 1,
+          "teamId": "7477",
+          "player": "Ren Komatsu",
+          "assist": "Issei Takahashi",
+          "scoreAfterEvent": {
+            "home": 0,
+            "away": 1
+          },
+          "homeScore": 0,
+          "awayScore": 1,
+          "ownGoal": true,
+          "isSecondYellow": false,
+          "description": "Goal! Port 0, Vissel Kobe 1. Ren Komatsu (Vissel Kobe) right footed shot from very close range to the bottom right corner. Assisted by Issei Takahashi.",
+          "text": "Goal! Port 0, Vissel Kobe 1. Ren Komatsu (Vissel Kobe) right footed shot from very close range to the bottom right corner. Assisted by Issei Takahashi.",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347808366204158",
+          "postedAt": "2026-09-16T12:26:28.698Z",
+          "occurrenceTime": "2026-09-16T12:24:40.000Z",
+          "goalKey": "10:p1:7477:0",
+          "lastContentSignature": "OWN_GOAL|0-1|Ren Komatsu|Issei Takahashi|10|VALID|Goal! Port 0, Vissel Kobe 1. Ren Komatsu (Vissel Kobe) right footed shot from very close range to the bottom right corner. Assisted by Issei Takahashi."
+        },
+        "401912654:OWN_GOAL:52496423": {
+          "eventId": "401912654:OWN_GOAL:52496423",
+          "eventKey": "401912654:OWN_GOAL:52496423",
+          "rawId": "52496423",
+          "type": "OWN_GOAL",
+          "minute": 45,
+          "period": 1,
+          "teamId": "17757",
+          "player": "Ren Komatsu",
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 1
+          },
+          "homeScore": 1,
+          "awayScore": 1,
+          "ownGoal": true,
+          "isSecondYellow": false,
+          "description": "Ren Komatsu (Vissel Kobe) Own Goal at 45'+4'",
+          "text": "Ren Komatsu (Vissel Kobe) Own Goal at 45'+4'",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347821650204158",
+          "postedAt": "2026-09-16T13:05:30.253Z",
+          "occurrenceTime": "2026-09-16T13:03:49.000Z",
+          "goalKey": "45:p1:17757:0",
+          "lastContentSignature": "OWN_GOAL|1-1|Ren Komatsu||45|PENDING|Ren Komatsu (Vissel Kobe) Own Goal at 45'+4'"
+        },
+        "401912654:HALF_TIME": {
+          "eventId": "401912654:HALF_TIME",
+          "eventKey": "401912654:HALF_TIME",
+          "rawId": null,
+          "type": "HALF_TIME",
+          "minute": 45,
+          "period": 1,
+          "teamId": "all",
+          "player": null,
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 1
+          },
+          "homeScore": 1,
+          "awayScore": 1,
+          "ownGoal": false,
+          "isSecondYellow": false,
+          "description": "",
+          "text": "",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347821716204158",
+          "postedAt": "2026-09-16T13:06:05.478Z",
+          "occurrenceTime": "2026-09-16T13:06:02.527Z",
+          "goalKey": null,
+          "lastContentSignature": "HALF_TIME|1-1|||45|PENDING|"
+        },
+        "401912654:GOAL:52496678": {
+          "eventId": "401912654:GOAL:52496678",
+          "eventKey": "401912654:GOAL:52496678",
+          "rawId": "52496678",
+          "type": "GOAL",
+          "minute": 61,
+          "period": 2,
+          "teamId": "7477",
+          "player": "Yoshinori Muto",
+          "assist": "Yuya Osako",
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 2
+          },
+          "homeScore": 1,
+          "awayScore": 2,
+          "ownGoal": false,
+          "isSecondYellow": false,
+          "description": "Goal! Port 1, Vissel Kobe 2. Yoshinori Muto (Vissel Kobe) right footed shot from the right side of the box to the bottom left corner. Assisted by Yuya Osako.",
+          "text": "Goal! Port 1, Vissel Kobe 2. Yoshinori Muto (Vissel Kobe) right footed shot from the right side of the box to the bottom left corner. Assisted by Yuya Osako.",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347825430204158",
+          "postedAt": "2026-09-16T13:37:56.322Z",
+          "occurrenceTime": "2026-09-16T13:36:08.000Z",
+          "goalKey": "61:p2:7477:0",
+          "lastContentSignature": "GOAL|1-2|Yoshinori Muto|Yuya Osako|61|PENDING|Goal! Port 1, Vissel Kobe 2. Yoshinori Muto (Vissel Kobe) right footed shot from the right side of the box to the bottom left corner. Assisted by Yuya Osako."
+        }
+      },
+      "raw": {
+        "id": "401912654"
+      },
+      "lineupsPosted": true,
+      "lineupPostId": "232327123298533_122347803398204158",
+      "facebookPosts": {
+        "232327123298533_122347806890204158": {
+          "postId": "232327123298533_122347806890204158",
+          "eventId": "401912654:KICKOFF",
+          "type": "KICKOFF",
+          "createdAt": "2026-09-16T12:16:33.911Z"
+        },
+        "232327123298533_122347808366204158": {
+          "postId": "232327123298533_122347808366204158",
+          "eventId": "401912654:GOAL:52495892",
+          "type": "GOAL",
+          "createdAt": "2026-09-16T12:26:28.698Z"
+        },
+        "232327123298533_122347821650204158": {
+          "postId": "232327123298533_122347821650204158",
+          "eventId": "401912654:OWN_GOAL:52496423",
+          "type": "OWN_GOAL",
+          "createdAt": "2026-09-16T13:05:30.253Z"
+        },
+        "232327123298533_122347821716204158": {
+          "postId": "232327123298533_122347821716204158",
+          "eventId": "401912654:HALF_TIME",
+          "type": "HALF_TIME",
+          "createdAt": "2026-09-16T13:06:05.478Z"
+        },
+        "232327123298533_122347825430204158": {
+          "postId": "232327123298533_122347825430204158",
+          "eventId": "401912654:GOAL:52496678",
+          "type": "GOAL",
+          "createdAt": "2026-09-16T13:37:56.322Z"
+        }
+      },
+      "lastUpdated": "2026-09-16T13:56:30.296Z",
+      "matchId": "401912654",
+      "homeTeam": "Port FC",
+      "awayTeam": "Vissel Kobe",
+      "lastScore": {
+        "home": 1,
+        "away": 2
+      },
+      "lastStatus": "in",
+      "lastPeriod": 2,
+      "lastClock": "80'",
+      "eventStates": {
+        "401912654:KICKOFF": {
+          "eventId": "401912654:KICKOFF",
+          "eventKey": "401912654:KICKOFF",
+          "rawId": null,
+          "type": "KICKOFF",
+          "minute": 1,
+          "period": 1,
+          "teamId": "all",
+          "player": null,
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 0,
+            "away": 0
+          },
+          "homeScore": 0,
+          "awayScore": 0,
+          "ownGoal": false,
+          "isSecondYellow": false,
+          "description": "",
+          "text": "",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347806890204158",
+          "postedAt": "2026-09-16T12:16:33.911Z",
+          "occurrenceTime": "2026-09-16T12:15Z",
+          "goalKey": null,
+          "lastContentSignature": "KICKOFF|0-0|||1|PENDING|"
+        },
+        "401912654:GOAL:52495892": {
+          "eventId": "401912654:GOAL:52495892",
+          "eventKey": "401912654:GOAL:52495892",
+          "rawId": "52495892",
+          "type": "OWN_GOAL",
+          "minute": 10,
+          "period": 1,
+          "teamId": "7477",
+          "player": "Ren Komatsu",
+          "assist": "Issei Takahashi",
+          "scoreAfterEvent": {
+            "home": 0,
+            "away": 1
+          },
+          "homeScore": 0,
+          "awayScore": 1,
+          "ownGoal": true,
+          "isSecondYellow": false,
+          "description": "Goal! Port 0, Vissel Kobe 1. Ren Komatsu (Vissel Kobe) right footed shot from very close range to the bottom right corner. Assisted by Issei Takahashi.",
+          "text": "Goal! Port 0, Vissel Kobe 1. Ren Komatsu (Vissel Kobe) right footed shot from very close range to the bottom right corner. Assisted by Issei Takahashi.",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347808366204158",
+          "postedAt": "2026-09-16T12:26:28.698Z",
+          "occurrenceTime": "2026-09-16T12:24:40.000Z",
+          "goalKey": "10:p1:7477:0",
+          "lastContentSignature": "OWN_GOAL|0-1|Ren Komatsu|Issei Takahashi|10|VALID|Goal! Port 0, Vissel Kobe 1. Ren Komatsu (Vissel Kobe) right footed shot from very close range to the bottom right corner. Assisted by Issei Takahashi."
+        },
+        "401912654:OWN_GOAL:52496423": {
+          "eventId": "401912654:OWN_GOAL:52496423",
+          "eventKey": "401912654:OWN_GOAL:52496423",
+          "rawId": "52496423",
+          "type": "OWN_GOAL",
+          "minute": 45,
+          "period": 1,
+          "teamId": "17757",
+          "player": "Ren Komatsu",
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 1
+          },
+          "homeScore": 1,
+          "awayScore": 1,
+          "ownGoal": true,
+          "isSecondYellow": false,
+          "description": "Ren Komatsu (Vissel Kobe) Own Goal at 45'+4'",
+          "text": "Ren Komatsu (Vissel Kobe) Own Goal at 45'+4'",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347821650204158",
+          "postedAt": "2026-09-16T13:05:30.253Z",
+          "occurrenceTime": "2026-09-16T13:03:49.000Z",
+          "goalKey": "45:p1:17757:0",
+          "lastContentSignature": "OWN_GOAL|1-1|Ren Komatsu||45|PENDING|Ren Komatsu (Vissel Kobe) Own Goal at 45'+4'"
+        },
+        "401912654:HALF_TIME": {
+          "eventId": "401912654:HALF_TIME",
+          "eventKey": "401912654:HALF_TIME",
+          "rawId": null,
+          "type": "HALF_TIME",
+          "minute": 45,
+          "period": 1,
+          "teamId": "all",
+          "player": null,
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 1
+          },
+          "homeScore": 1,
+          "awayScore": 1,
+          "ownGoal": false,
+          "isSecondYellow": false,
+          "description": "",
+          "text": "",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347821716204158",
+          "postedAt": "2026-09-16T13:06:05.478Z",
+          "occurrenceTime": "2026-09-16T13:06:02.527Z",
+          "goalKey": null,
+          "lastContentSignature": "HALF_TIME|1-1|||45|PENDING|"
+        },
+        "401912654:GOAL:52496678": {
+          "eventId": "401912654:GOAL:52496678",
+          "eventKey": "401912654:GOAL:52496678",
+          "rawId": "52496678",
+          "type": "GOAL",
+          "minute": 61,
+          "period": 2,
+          "teamId": "7477",
+          "player": "Yoshinori Muto",
+          "assist": "Yuya Osako",
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 2
+          },
+          "homeScore": 1,
+          "awayScore": 2,
+          "ownGoal": false,
+          "isSecondYellow": false,
+          "description": "Goal! Port 1, Vissel Kobe 2. Yoshinori Muto (Vissel Kobe) right footed shot from the right side of the box to the bottom left corner. Assisted by Yuya Osako.",
+          "text": "Goal! Port 1, Vissel Kobe 2. Yoshinori Muto (Vissel Kobe) right footed shot from the right side of the box to the bottom left corner. Assisted by Yuya Osako.",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347825430204158",
+          "postedAt": "2026-09-16T13:37:56.322Z",
+          "occurrenceTime": "2026-09-16T13:36:08.000Z",
+          "goalKey": "61:p2:7477:0",
+          "lastContentSignature": "GOAL|1-2|Yoshinori Muto|Yuya Osako|61|PENDING|Goal! Port 1, Vissel Kobe 2. Yoshinori Muto (Vissel Kobe) right footed shot from the right side of the box to the bottom left corner. Assisted by Yuya Osako."
+        }
+      },
+      "postedEvents": [
+        "401912654:KICKOFF",
+        "401912654:GOAL:52495892",
+        "401912654:OWN_GOAL:52496423",
+        "401912654:HALF_TIME",
+        "401912654:GOAL:52496678"
+      ],
+      "goalPosts": {
+        "10:p1:7477:0": {
+          "postId": "232327123298533_122347808366204158",
+          "scorer": "Ren Komatsu",
+          "assist": "Issei Takahashi"
+        },
+        "45:p1:17757:0": {
+          "postId": "232327123298533_122347821650204158",
+          "scorer": "Ren Komatsu",
+          "assist": null
+        },
+        "61:p2:7477:0": {
+          "postId": "232327123298533_122347825430204158",
+          "scorer": "Yoshinori Muto",
+          "assist": "Yuya Osako"
+        }
+      }
+    },
+    "401912670": {
+      "matchId": "401912670",
+      "fixtureId": "401912670",
+      "homeId": "7119",
+      "awayId": "7476",
+      "homeName": "Jeonbuk Motors",
+      "awayName": "Kashiwa Reysol",
+      "homeTeam": "Jeonbuk Motors",
+      "awayTeam": "Kashiwa Reysol",
+      "leagueName": "AFC Champions League Elite",
+      "leagueSlug": "afc.champions.east",
+      "lineupsPosted": true,
+      "lineupPostId": null,
+      "score": {
+        "home": 2,
+        "away": 1
+      },
+      "lastScore": {
+        "home": 2,
+        "away": 1
+      },
+      "status": {
+        "state": "post",
+        "period": 2,
+        "clock": "90'+5'",
+        "description": "",
+        "detail": "",
+        "name": "STATUS_FULL_TIME"
+      },
+      "lastStatus": "post",
+      "lastPeriod": 2,
+      "lastClock": "90'+5'",
+      "events": {
+        "401912670:KICKOFF": {
+          "eventId": "401912670:KICKOFF",
+          "eventKey": "401912670:KICKOFF",
+          "rawId": null,
+          "type": "KICKOFF",
+          "minute": 1,
+          "period": 1,
+          "teamId": "all",
+          "player": null,
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 0,
+            "away": 0
+          },
+          "status": "EXPIRED",
+          "facebookPostId": null,
+          "postedAt": null,
+          "lastContentSignature": null
+        },
+        "401912670:GOAL:52494728": {
+          "eventId": "401912670:GOAL:52494728",
+          "eventKey": "401912670:GOAL:52494728",
+          "rawId": "52494728",
+          "type": "GOAL",
+          "minute": 30,
+          "period": 1,
+          "teamId": "7476",
+          "player": "Kenshin Yuba",
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 0,
+            "away": 1
+          },
+          "status": "EXPIRED",
+          "facebookPostId": null,
+          "postedAt": null,
+          "lastContentSignature": null
+        },
+        "401912670:HALF_TIME": {
+          "eventId": "401912670:HALF_TIME",
+          "eventKey": "401912670:HALF_TIME",
+          "rawId": "52494965",
+          "type": "HALF_TIME",
+          "minute": 45,
+          "period": 1,
+          "teamId": null,
+          "player": null,
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 1
+          },
+          "status": "EXPIRED",
+          "facebookPostId": null,
+          "postedAt": null,
+          "lastContentSignature": null
+        },
+        "401912670:GOAL:52495046": {
+          "eventId": "401912670:GOAL:52495046",
+          "eventKey": "401912670:GOAL:52495046",
+          "rawId": "52495046",
+          "type": "GOAL",
+          "minute": 48,
+          "period": 2,
+          "teamId": "7119",
+          "player": "Tiago Pereira",
+          "assist": "Kim Tae-Hwan",
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 1
+          },
+          "status": "EXPIRED",
+          "facebookPostId": null,
+          "postedAt": null,
+          "lastContentSignature": null
+        },
+        "401912670:GOAL_DISALLOWED:52495225": {
+          "eventId": "401912670:GOAL_DISALLOWED:52495225",
+          "eventKey": "401912670:GOAL_DISALLOWED:52495225",
+          "rawId": "52495225",
+          "type": "GOAL_DISALLOWED",
+          "minute": 60,
+          "period": 1,
+          "teamId": null,
+          "player": "Yusuke Segawa",
+          "assist": "Tojiro Kubo",
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 1
+          },
+          "status": "DISALLOWED",
+          "facebookPostId": null,
+          "postedAt": null,
+          "lastContentSignature": "GOAL_DISALLOWED|1-1|Yusuke Segawa|Tojiro Kubo|60|DISALLOWED|",
+          "disallowedReason": "GOAL OVERTURNED BY VAR: Yusuke Segawa (Kashiwa Reysol) scores but the goal is ruled out after a VAR review."
+        },
+        "401912670:GOAL:52495334": {
+          "eventId": "401912670:GOAL:52495334",
+          "eventKey": "401912670:GOAL:52495334",
+          "rawId": "52495334",
+          "type": "GOAL",
+          "minute": 69,
+          "period": 2,
+          "teamId": "7119",
+          "player": "Italo",
+          "assist": "Lee Yeong-Jae",
+          "scoreAfterEvent": {
+            "home": 2,
+            "away": 1
+          },
+          "homeScore": 2,
+          "awayScore": 1,
+          "ownGoal": false,
+          "isSecondYellow": false,
+          "description": "Goal! Jeonbuk Motors 2, Kashiwa Reysol 1. Italo (Jeonbuk Motors) right footed shot from the centre of the box to the bottom right corner. Assisted by Lee Yeong-Jae.",
+          "text": "Goal! Jeonbuk Motors 2, Kashiwa Reysol 1. Italo (Jeonbuk Motors) right footed shot from the centre of the box to the bottom right corner. Assisted by Lee Yeong-Jae.",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347800830204158",
+          "postedAt": "2026-09-16T11:28:27.640Z",
+          "occurrenceTime": "2026-09-16T11:26:13.000Z",
+          "goalKey": "69:p2:7119:0",
+          "lastContentSignature": "GOAL|2-1|Italo|Lee Yeong-Jae|69|PENDING|Goal! Jeonbuk Motors 2, Kashiwa Reysol 1. Italo (Jeonbuk Motors) right footed shot from the centre of the box to the bottom right corner. Assisted by Lee Yeong-Jae."
+        },
+        "401912670:FULL_TIME": {
+          "eventId": "401912670:FULL_TIME",
+          "eventKey": "401912670:FULL_TIME",
+          "rawId": null,
+          "type": "FULL_TIME",
+          "minute": 90,
+          "period": 2,
+          "teamId": "all",
+          "player": null,
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 2,
+            "away": 1
+          },
+          "homeScore": 2,
+          "awayScore": 1,
+          "ownGoal": false,
+          "isSecondYellow": false,
+          "description": "",
+          "text": "",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347803938204158",
+          "postedAt": "2026-09-16T11:54:35.268Z",
+          "occurrenceTime": "2026-09-16T11:54:30.300Z",
+          "goalKey": null,
+          "lastContentSignature": "FULL_TIME|2-1|||90|PENDING|"
+        }
+      },
+      "facebookPosts": {
+        "232327123298533_122347800830204158": {
+          "postId": "232327123298533_122347800830204158",
+          "eventId": "401912670:GOAL:52495334",
+          "type": "GOAL",
+          "createdAt": "2026-09-16T11:28:27.640Z"
+        },
+        "232327123298533_122347803938204158": {
+          "postId": "232327123298533_122347803938204158",
+          "eventId": "401912670:FULL_TIME",
+          "type": "FULL_TIME",
+          "createdAt": "2026-09-16T11:54:35.268Z"
+        }
+      },
+      "eventStates": {
+        "401912670:KICKOFF": {
+          "eventId": "401912670:KICKOFF",
+          "eventKey": "401912670:KICKOFF",
+          "rawId": null,
+          "type": "KICKOFF",
+          "minute": 1,
+          "period": 1,
+          "teamId": "all",
+          "player": null,
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 0,
+            "away": 0
+          },
+          "status": "EXPIRED",
+          "facebookPostId": null,
+          "postedAt": null,
+          "lastContentSignature": null
+        },
+        "401912670:GOAL:52494728": {
+          "eventId": "401912670:GOAL:52494728",
+          "eventKey": "401912670:GOAL:52494728",
+          "rawId": "52494728",
+          "type": "GOAL",
+          "minute": 30,
+          "period": 1,
+          "teamId": "7476",
+          "player": "Kenshin Yuba",
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 0,
+            "away": 1
+          },
+          "status": "EXPIRED",
+          "facebookPostId": null,
+          "postedAt": null,
+          "lastContentSignature": null
+        },
+        "401912670:HALF_TIME": {
+          "eventId": "401912670:HALF_TIME",
+          "eventKey": "401912670:HALF_TIME",
+          "rawId": "52494965",
+          "type": "HALF_TIME",
+          "minute": 45,
+          "period": 1,
+          "teamId": null,
+          "player": null,
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 1
+          },
+          "status": "EXPIRED",
+          "facebookPostId": null,
+          "postedAt": null,
+          "lastContentSignature": null
+        },
+        "401912670:GOAL:52495046": {
+          "eventId": "401912670:GOAL:52495046",
+          "eventKey": "401912670:GOAL:52495046",
+          "rawId": "52495046",
+          "type": "GOAL",
+          "minute": 48,
+          "period": 2,
+          "teamId": "7119",
+          "player": "Tiago Pereira",
+          "assist": "Kim Tae-Hwan",
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 1
+          },
+          "status": "EXPIRED",
+          "facebookPostId": null,
+          "postedAt": null,
+          "lastContentSignature": null
+        },
+        "401912670:GOAL_DISALLOWED:52495225": {
+          "eventId": "401912670:GOAL_DISALLOWED:52495225",
+          "eventKey": "401912670:GOAL_DISALLOWED:52495225",
+          "rawId": "52495225",
+          "type": "GOAL_DISALLOWED",
+          "minute": 60,
+          "period": 1,
+          "teamId": null,
+          "player": "Yusuke Segawa",
+          "assist": "Tojiro Kubo",
+          "scoreAfterEvent": {
+            "home": 1,
+            "away": 1
+          },
+          "status": "DISALLOWED",
+          "facebookPostId": null,
+          "postedAt": null,
+          "lastContentSignature": "GOAL_DISALLOWED|1-1|Yusuke Segawa|Tojiro Kubo|60|DISALLOWED|",
+          "disallowedReason": "GOAL OVERTURNED BY VAR: Yusuke Segawa (Kashiwa Reysol) scores but the goal is ruled out after a VAR review."
+        },
+        "401912670:GOAL:52495334": {
+          "eventId": "401912670:GOAL:52495334",
+          "eventKey": "401912670:GOAL:52495334",
+          "rawId": "52495334",
+          "type": "GOAL",
+          "minute": 69,
+          "period": 2,
+          "teamId": "7119",
+          "player": "Italo",
+          "assist": "Lee Yeong-Jae",
+          "scoreAfterEvent": {
+            "home": 2,
+            "away": 1
+          },
+          "homeScore": 2,
+          "awayScore": 1,
+          "ownGoal": false,
+          "isSecondYellow": false,
+          "description": "Goal! Jeonbuk Motors 2, Kashiwa Reysol 1. Italo (Jeonbuk Motors) right footed shot from the centre of the box to the bottom right corner. Assisted by Lee Yeong-Jae.",
+          "text": "Goal! Jeonbuk Motors 2, Kashiwa Reysol 1. Italo (Jeonbuk Motors) right footed shot from the centre of the box to the bottom right corner. Assisted by Lee Yeong-Jae.",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347800830204158",
+          "postedAt": "2026-09-16T11:28:27.640Z",
+          "occurrenceTime": "2026-09-16T11:26:13.000Z",
+          "goalKey": "69:p2:7119:0",
+          "lastContentSignature": "GOAL|2-1|Italo|Lee Yeong-Jae|69|PENDING|Goal! Jeonbuk Motors 2, Kashiwa Reysol 1. Italo (Jeonbuk Motors) right footed shot from the centre of the box to the bottom right corner. Assisted by Lee Yeong-Jae."
+        },
+        "401912670:FULL_TIME": {
+          "eventId": "401912670:FULL_TIME",
+          "eventKey": "401912670:FULL_TIME",
+          "rawId": null,
+          "type": "FULL_TIME",
+          "minute": 90,
+          "period": 2,
+          "teamId": "all",
+          "player": null,
+          "assist": null,
+          "scoreAfterEvent": {
+            "home": 2,
+            "away": 1
+          },
+          "homeScore": 2,
+          "awayScore": 1,
+          "ownGoal": false,
+          "isSecondYellow": false,
+          "description": "",
+          "text": "",
+          "reason": "",
+          "status": "VALID",
+          "facebookPostId": "232327123298533_122347803938204158",
+          "postedAt": "2026-09-16T11:54:35.268Z",
+          "occurrenceTime": "2026-09-16T11:54:30.300Z",
+          "goalKey": null,
+          "lastContentSignature": "FULL_TIME|2-1|||90|PENDING|"
+        }
+      },
+      "postedEvents": [
+        "401912670:GOAL:52495334",
+        "401912670:FULL_TIME"
+      ],
+      "goalPosts": {
+        "69:p2:7119:0": {
+          "postId": "232327123298533_122347800830204158",
+          "scorer": "Italo",
+          "assist": "Lee Yeong-Jae"
+        }
+      },
+      "lastUpdated": "2026-09-16T11:55:40.072Z"
     }
   }
 }

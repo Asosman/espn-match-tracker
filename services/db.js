@@ -129,15 +129,23 @@ export async function updateMatchRecord(fixtureId, updaterFn) {
   return enqueueWrite(async () => {
     const db = await getDatabase();
     const current = db.matches[fixtureId] || {
+      matchId: fixtureId,
       fixtureId,
       homeName: '',
       awayName: '',
+      homeTeam: '',
+      awayTeam: '',
       leagueName: '',
       leagueSlug: '',
       lineupPostId: null,
       mainMatchPostId: null,
       lineupsPosted: false,
+      score: { home: 0, away: 0 },
       lastScore: { home: 0, away: 0 },
+      status: { state: 'pre' },
+      events: {},
+      facebookPosts: {},
+      eventStates: {},
       postedEvents: [],
       latestPostContent: '',
       goalPosts: {},
@@ -147,13 +155,99 @@ export async function updateMatchRecord(fixtureId, updaterFn) {
       lastClock: '',
     };
 
+    if (!current.events) current.events = {};
+    if (!current.facebookPosts) current.facebookPosts = {};
+    if (!current.eventStates) current.eventStates = {};
+    if (!current.matchId) current.matchId = fixtureId;
+
     const updated = updaterFn(current) || current;
     updated.fixtureId = fixtureId;
+    updated.matchId = fixtureId;
     updated.lastUpdated = new Date().toISOString();
     db.matches[fixtureId] = updated;
 
     await writeDbAtomic(db);
     return updated;
+  });
+}
+
+/**
+ * Returns all events for a match from canonical storage.
+ * @param {string} fixtureId
+ * @returns {Promise<Record<string, any>>}
+ */
+export async function getMatchEvents(fixtureId) {
+  const match = await getMatchRecord(fixtureId);
+  return match?.events || {};
+}
+
+/**
+ * Saves or updates an event in a match's canonical record.
+ * @param {string} fixtureId
+ * @param {string} eventId
+ * @param {object} eventData
+ * @returns {Promise<any>}
+ */
+export async function saveMatchEvent(fixtureId, eventId, eventData) {
+  return updateMatchRecord(fixtureId, (match) => {
+    if (!match.events) match.events = {};
+    match.events[eventId] = {
+      ...(match.events[eventId] || {}),
+      ...eventData,
+      eventId,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Keep eventStates backward-compatible alias in sync
+    if (!match.eventStates) match.eventStates = {};
+    match.eventStates[eventId] = match.events[eventId];
+
+    return match;
+  });
+}
+
+/**
+ * Returns a Facebook post record by ID for a match.
+ * @param {string} fixtureId
+ * @param {string} postId
+ * @returns {Promise<any|null>}
+ */
+export async function getMatchFacebookPost(fixtureId, postId) {
+  const match = await getMatchRecord(fixtureId);
+  return match?.facebookPosts?.[postId] || null;
+}
+
+/**
+ * Records a Facebook post mapping against an event.
+ * @param {string} fixtureId
+ * @param {string} postId
+ * @param {string} eventId
+ * @param {string} type
+ * @returns {Promise<any>}
+ */
+export async function recordFacebookPost(fixtureId, postId, eventId, type) {
+  return updateMatchRecord(fixtureId, (match) => {
+    if (!match.facebookPosts) match.facebookPosts = {};
+    match.facebookPosts[postId] = {
+      postId,
+      eventId,
+      type,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (match.events && match.events[eventId]) {
+      match.events[eventId].facebookPostId = postId;
+      match.events[eventId].status = 'VALID';
+      match.events[eventId].postedAt = match.facebookPosts[postId].createdAt;
+    }
+
+    if (match.eventStates && match.eventStates[eventId]) {
+      match.eventStates[eventId].facebookPostId = postId;
+      match.eventStates[eventId].status = 'POSTED';
+      match.eventStates[eventId].postedAt = match.facebookPosts[postId].createdAt;
+    }
+
+    return match;
   });
 }
 
@@ -189,6 +283,10 @@ export default {
   getMatchRecord,
   saveMatchRecord,
   updateMatchRecord,
+  getMatchEvents,
+  saveMatchEvent,
+  getMatchFacebookPost,
+  recordFacebookPost,
   getAllMatches,
   removeMatchRecord,
 };

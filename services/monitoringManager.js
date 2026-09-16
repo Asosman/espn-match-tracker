@@ -5,7 +5,7 @@ import db from './db.js';
 import realFacebook from './facebook.js';
 import mockFacebook from '../mock/mockFacebookClient.js';
 import { fetchMatchDetails } from './espn.js';
-import { compareMatchState, formatEventPost, formatLineupPost } from './eventEngine.js';
+import { compareMatchState, formatEventPost, formatLineupPost, isWhitelistedEvent } from './eventEngine.js';
 
 class MonitoringManager {
   constructor() {
@@ -15,10 +15,38 @@ class MonitoringManager {
     this.cycleCount = 0;
     this.lastPollTimestamp = null;
     this.fullTimeGraceCycles = new Map(); // tracks full-time removal
+    this.matchLocks = new Map(); // Per-match concurrency protection
   }
 
   get facebook() {
     return config.isMockMode ? mockFacebook : realFacebook;
+  }
+
+  /**
+   * Concurrency protection: ensures only one polling cycle processes a match at any given time.
+   * @template T
+   * @param {string} fixtureId
+   * @param {() => Promise<T>} task
+   * @returns {Promise<T>}
+   */
+  async withMatchLock(fixtureId, task) {
+    const id = String(fixtureId);
+    while (this.matchLocks.has(id)) {
+      await this.matchLocks.get(id);
+    }
+
+    let release;
+    const lockPromise = new Promise((resolve) => {
+      release = resolve;
+    });
+    this.matchLocks.set(id, lockPromise);
+
+    try {
+      return await task();
+    } finally {
+      this.matchLocks.delete(id);
+      release();
+    }
   }
 
   /**
@@ -137,143 +165,185 @@ class MonitoringManager {
 
   /**
    * Processes a single match through the event comparison and publishing lifecycle.
+   * Concurrency-protected via per-match locking.
    * @param {string} fixtureId
    */
   async processMatch(fixtureId) {
-    const prevRecord = await db.getMatchRecord(fixtureId);
-    const leagueSlug = prevRecord?.leagueSlug || 'eng.1';
+    return this.withMatchLock(fixtureId, async () => {
+      const prevRecord = await db.getMatchRecord(fixtureId);
+      const leagueSlug = prevRecord?.leagueSlug || 'eng.1';
 
-    // 1. Fetch current normalized ESPN state
-    const currentMatch = await fetchMatchDetails(fixtureId, leagueSlug, prevRecord);
-    if (!currentMatch) {
-      logger.warn(`Could not retrieve details for fixture ${fixtureId}; skipping this cycle.`);
-      return;
-    }
-    
-    // 2. Compare states and detect transitions/events
-    const { newEvents, goalPostEdits, injuryPostEdits, lineupPostAction, eventStates: updatedEventStates } = compareMatchState(
-      prevRecord,
-      currentMatch
-    );
+      // 1. Fetch current normalized ESPN state
+      const currentMatch = await fetchMatchDetails(fixtureId, leagueSlug, prevRecord);
+      if (!currentMatch) {
+        logger.warn(`Could not retrieve details for fixture ${fixtureId}; skipping this cycle.`);
+        return;
+      }
 
-    const postedEventsSet = new Set(prevRecord?.postedEvents || []);
-    const goalPosts = { ...(prevRecord?.goalPosts || {}) };
-    const injuryEvents = [...(prevRecord?.injuryEvents || [])];
-    const eventStates = { ...(updatedEventStates || {}) };
-    let lineupsPosted = Boolean(prevRecord?.lineupsPosted);
-    let lineupPostId = prevRecord?.lineupPostId || null;
+      // 2. Compare states and detect transitions/events
+      const {
+        newEvents,
+        goalPostEdits,
+        eventPostEdits,
+        lineupPostAction,
+        events: canonicalEvents,
+        facebookPosts: canonicalFacebookPosts,
+      } = compareMatchState(prevRecord, currentMatch);
 
-    // 3. Handle Starting Lineups
-    if (lineupPostAction === 'PUBLISH') {
-      const lineupMsg = formatLineupPost(currentMatch, currentMatch.lineups.home, currentMatch.lineups.away);
-      logger.info(`Publishing official starting lineups for ${currentMatch.homeName} vs ${currentMatch.awayName}...`);
-      lineupPostId = await this.facebook.createPagePost(lineupMsg);
-      lineupsPosted = true;
-    } else if (lineupPostAction === 'SKIP') {
-      lineupsPosted = true; // Permanently marked to stop retrying post-kickoff
-    }
+      let lineupsPosted = Boolean(prevRecord?.lineupsPosted);
+      let lineupPostId = prevRecord?.lineupPostId || null;
 
-    // 4. Publish New Events
-    for (const ev of newEvents) {
-      const postMsg = formatEventPost(ev, currentMatch);
-      logger.info(`Publishing new event: [${ev.type}] for ${currentMatch.homeName} vs ${currentMatch.awayName}`);
-      const postId = await this.facebook.createPagePost(postMsg);
+      // 3. Handle Starting Lineups
+      if (lineupPostAction === 'PUBLISH' && !lineupsPosted) {
+        const lineupMsg = formatLineupPost(currentMatch, currentMatch.lineups.home, currentMatch.lineups.away);
+        logger.info(`Publishing official starting lineups for ${currentMatch.homeName} vs ${currentMatch.awayName}...`);
+        lineupPostId = await this.facebook.createPagePost(lineupMsg);
+        lineupsPosted = true;
 
-      if (postId) {
-        if (ev.sig) postedEventsSet.add(ev.sig);
+        await db.saveMatchRecord(fixtureId, {
+          ...currentMatch,
+          lineupsPosted: true,
+          lineupPostId,
+          events: canonicalEvents,
+          facebookPosts: canonicalFacebookPosts,
+        });
+      } else if (lineupPostAction === 'SKIP') {
+        lineupsPosted = true;
+      }
 
-        eventStates[ev.eventKey] = {
-          eventKey: ev.eventKey,
-          eventType: ev.type,
-          facebookPostId: postId,
-          postedAt: new Date().toISOString(),
-          lastContentSignature: ev.contentSignature || '',
-          status: 'POSTED'
-        };
+      // 4. ATOMIC SEQUENCE STEP 1: Persist pending events to DB BEFORE calling Facebook API
+      if (newEvents.length > 0) {
+        await db.saveMatchRecord(fixtureId, {
+          matchId: fixtureId,
+          fixtureId,
+          homeName: currentMatch.homeName,
+          awayName: currentMatch.awayName,
+          homeTeam: currentMatch.homeName,
+          awayTeam: currentMatch.awayName,
+          leagueName: currentMatch.leagueName,
+          leagueSlug: currentMatch.leagueSlug,
+          lineupsPosted,
+          lineupPostId,
+          score: currentMatch.score,
+          lastScore: currentMatch.score,
+          status: currentMatch.status,
+          lastStatus: currentMatch.status.state,
+          lastPeriod: currentMatch.status.period,
+          lastClock: currentMatch.status.clock,
+          events: canonicalEvents,
+          facebookPosts: canonicalFacebookPosts,
+          eventStates: canonicalEvents,
+        });
+      }
 
-        // Track goal posts for future edits (legacy compatibility)
-        if (ev.type === 'GOAL' && ev.goalKey) {
-          goalPosts[ev.goalKey] = {
+      // 5. Publish New Events with duplicate pre-check
+      for (const ev of newEvents) {
+        if (!isWhitelistedEvent(ev)) continue;
+
+        // PRE-CHECK: Check if Facebook post already exists for this event
+        const existingPostId = canonicalEvents[ev.eventId]?.facebookPostId || prevRecord?.facebookPosts?.[ev.eventId]?.postId;
+        if (existingPostId) {
+          logger.warn(`[DUPLICATE PROTECTION] Facebook post already exists (${existingPostId}) for event ${ev.eventId}. Skipping.`);
+          continue;
+        }
+
+        const postMsg = formatEventPost(ev, currentMatch);
+        logger.info(`Publishing new event: [${ev.type}] (${ev.eventId}) for ${currentMatch.homeName} vs ${currentMatch.awayName}`);
+        const postId = await this.facebook.createPagePost(postMsg);
+
+        if (postId) {
+          // Finalize event status and store Facebook post ID
+          canonicalEvents[ev.eventId] = {
+            ...canonicalEvents[ev.eventId],
+            facebookPostId: postId,
+            status: 'VALID',
+            postedAt: new Date().toISOString(),
+          };
+
+          canonicalFacebookPosts[postId] = {
             postId,
-            scorer: ev.player || null,
-            assist: ev.assist || null,
+            eventId: ev.eventId,
+            type: ev.type,
+            createdAt: canonicalEvents[ev.eventId].postedAt,
+          };
+
+          // ATOMIC STEP 2: Persist Facebook post ID immediately
+          await db.recordFacebookPost(fixtureId, postId, ev.eventId, ev.type);
+        }
+      }
+
+      // 6. Apply Post Edits (when scorer, assist, red card player resolve, or goal disallowed)
+      const editsToApply = eventPostEdits?.length > 0 ? eventPostEdits : (goalPostEdits || []);
+      for (const edit of editsToApply) {
+        if (!edit.postId) continue;
+
+        const updatedMsg = formatEventPost(edit.event, currentMatch);
+        logger.info(`Updating Facebook post ${edit.postId} (${edit.eventId}) with newly resolved details...`);
+        const success = await this.facebook.updatePagePost(edit.postId, updatedMsg);
+
+        if (success && edit.eventId && canonicalEvents[edit.eventId]) {
+          canonicalEvents[edit.eventId].lastContentSignature = edit.newContentSig;
+          if (edit.isDisallowed) {
+            canonicalEvents[edit.eventId].status = 'DISALLOWED';
+          }
+          await db.saveMatchEvent(fixtureId, edit.eventId, canonicalEvents[edit.eventId]);
+        }
+      }
+
+      // 7. Persist Final Canonical Match State
+      const postedEventsList = Object.values(canonicalEvents)
+        .filter((e) => e.facebookPostId || e.status === 'VALID' || e.status === 'POSTED')
+        .map((e) => e.eventId);
+
+      const goalPostsMap = {};
+      for (const e of Object.values(canonicalEvents)) {
+        if ((e.type === 'GOAL' || e.type === 'PENALTY_SCORED' || e.type === 'OWN_GOAL') && e.facebookPostId) {
+          const key = e.goalKey || `${e.minute}:${e.scoreAfterEvent?.home}-${e.scoreAfterEvent?.away}`;
+          goalPostsMap[key] = {
+            postId: e.facebookPostId,
+            scorer: e.player || null,
+            assist: e.assist || null,
           };
         }
+      }
 
-        // Track injury posts for future edits (legacy compatibility)
-        if (ev.type === 'INJURY') {
-          injuryEvents.push({
-            minute: ev.minute,
-            player: ev.player || null,
-            postId,
-          });
+      await db.saveMatchRecord(fixtureId, {
+        matchId: fixtureId,
+        fixtureId,
+        homeId: currentMatch.homeId,
+        awayId: currentMatch.awayId,
+        homeName: currentMatch.homeName,
+        awayName: currentMatch.awayName,
+        homeTeam: currentMatch.homeName,
+        awayTeam: currentMatch.awayName,
+        leagueName: currentMatch.leagueName,
+        leagueSlug: currentMatch.leagueSlug,
+        lineupsPosted,
+        lineupPostId,
+        score: currentMatch.score,
+        lastScore: currentMatch.score,
+        status: currentMatch.status,
+        lastStatus: currentMatch.status.state,
+        lastPeriod: currentMatch.status.period,
+        lastClock: currentMatch.status.clock,
+        events: canonicalEvents,
+        facebookPosts: canonicalFacebookPosts,
+        // Backward-compatibility properties
+        eventStates: canonicalEvents,
+        postedEvents: postedEventsList,
+        goalPosts: goalPostsMap,
+      });
+
+      // 8. Full-time retirement handling: retire after 3 grace cycles
+      if (currentMatch.status.state === 'post') {
+        const count = (this.fullTimeGraceCycles.get(fixtureId) || 0) + 1;
+        this.fullTimeGraceCycles.set(fixtureId, count);
+        if (count >= 3) {
+          logger.info(`Match ${currentMatch.homeName} vs ${currentMatch.awayName} has completed (Full-Time grace period elapsed). Removing from active polling.`);
+          this.monitoredFixtureIds.delete(fixtureId);
         }
       }
-    }
-
-    // 5. Apply Goal Post Edits (when scorer or assist resolve later)
-    for (const edit of goalPostEdits) {
-      const updatedMsg = formatEventPost(edit.event, currentMatch);
-      logger.info(`Updating Facebook goal post ${edit.postId} with newly resolved scorer/assist...`);
-      const success = await this.facebook.updatePagePost(edit.postId, updatedMsg);
-
-      if (success) {
-        if (eventStates[edit.eventKey]) {
-          eventStates[edit.eventKey].lastContentSignature = edit.newContentSig;
-        }
-
-        goalPosts[edit.goalKey] = {
-          postId: edit.postId,
-          scorer: edit.event.player || null,
-          assist: edit.event.assist || null,
-        };
-      }
-    }
-
-    // 6. Apply Injury Post Edits (when player name resolves later)
-    for (const edit of injuryPostEdits) {
-      const updatedMsg = formatEventPost(edit.event, currentMatch);
-      logger.info(`Updating Facebook injury post ${edit.postId} with resolved player name...`);
-      const success = await this.facebook.updatePagePost(edit.postId, updatedMsg);
-
-      if (success) {
-        if (eventStates[edit.eventKey]) {
-          eventStates[edit.eventKey].lastContentSignature = edit.newContentSig;
-        }
-
-        const inj = injuryEvents.find((i) => i.minute === edit.event.minute);
-        if (inj) inj.player = edit.event.player;
-      }
-    }
-
-    // 7. Persist Updated Match State Atomically
-    await db.saveMatchRecord(fixtureId, {
-      fixtureId,
-      homeName: currentMatch.homeName,
-      awayName: currentMatch.awayName,
-      leagueName: currentMatch.leagueName,
-      leagueSlug: currentMatch.leagueSlug,
-      lineupsPosted,
-      lineupPostId,
-      lastScore: currentMatch.score,
-      postedEvents: Array.from(postedEventsSet),
-      goalPosts,
-      injuryEvents,
-      eventStates,
-      lastStatus: currentMatch.status.state,
-      lastPeriod: currentMatch.status.period,
-      lastClock: currentMatch.status.clock,
     });
-
-    // 8. Full-time retirement handling: If match is full time, retire after 3 grace cycles
-    if (currentMatch.status.state === 'post') {
-      const count = (this.fullTimeGraceCycles.get(fixtureId) || 0) + 1;
-      this.fullTimeGraceCycles.set(fixtureId, count);
-      if (count >= 3) {
-        logger.info(`Match ${currentMatch.homeName} vs ${currentMatch.awayName} has completed (Full-Time grace period elapsed). Removing from active polling.`);
-        this.monitoredFixtureIds.delete(fixtureId);
-      }
-    }
   }
 }
 

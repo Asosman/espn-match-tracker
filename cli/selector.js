@@ -127,33 +127,41 @@ export function displayFixturesSummary(matches) {
       const home = m.homeName || 'Home';
       const away = m.awayName || 'Away';
       const matchup = padEnd(`${home} vs ${away}`, 31);
+      const hasShootout = m.shootout && m.shootout.home !== undefined && m.shootout.away !== undefined;
+      const shootoutScoreTag = hasShootout ? ` ${C.yellow}(${m.shootout.home}-${m.shootout.away} P)${C.reset}` : '';
       const scoreStr =
         m.status?.state !== 'pre'
-          ? `${C.bold}${m.score?.home ?? 0} - ${m.score?.away ?? 0}${C.reset}`
+          ? `${C.bold}${m.score?.home ?? 0} - ${m.score?.away ?? 0}${C.reset}${shootoutScoreTag}`
           : `${C.gray}  -  ${C.reset}`;
 
       console.log(
         `${C.gray}│${C.reset} ${numStr} ${C.gray}│${C.reset} ${statusTag} ${C.gray}│${C.reset} ${kickoff} ${C.gray}│${C.reset} ${matchup} ${C.gray}│${C.reset} ${padEnd(
           scoreStr,
-          6
+          hasShootout ? 14 : 6
         )} ${C.gray}│${C.reset}`
       );
 
       // Render Goal Scorers and Assist names if events exist
       if (m.events && m.events.length > 0) {
-        const goals = m.events.filter((e) => e.type === 'GOAL');
+        const goals = m.events.filter((e) => (e.type === 'GOAL' || e.type === 'OWN_GOAL') && e.period !== 5 && !e.isShootout && !e.shootoutPlay);
         if (goals.length > 0) {
           goals.forEach((g) => {
             const min = g.minute ? `${g.minute}'` : '';
             const assistText = g.assist
               ? ` ${C.gray}(${C.cyan}🅰️ Assist: ${C.bold}${g.assist}${C.reset}${C.gray})${C.reset}`
               : '';
-            const ogText = g.ownGoal ? ` ${C.yellow}(OG)${C.reset}` : '';
+            const ogText = (g.ownGoal || g.type === 'OWN_GOAL') ? ` ${C.yellow}(OG)${C.reset}` : '';
             console.log(
               `${C.gray}│${C.reset}      ${C.gray}│${C.reset}              ${C.gray}│${C.reset}             ${C.gray}│${C.reset}  ⚽ ${C.white}${g.player || 'Goal'}${ogText} ${C.dim}${min}${C.reset}${assistText}`
             );
           });
         }
+      }
+
+      if (hasShootout) {
+        console.log(
+          `${C.gray}│${C.reset}      ${C.gray}│${C.reset}              ${C.gray}│${C.reset}             ${C.gray}│${C.reset}  🥅 ${C.yellow}${C.bold}Penalty Shootout: ${home} ${m.shootout.home} - ${m.shootout.away} ${away}${C.reset}`
+        );
       }
 
       counter++;

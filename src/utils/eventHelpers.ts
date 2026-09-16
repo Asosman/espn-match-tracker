@@ -98,6 +98,19 @@ export function extractMatchHighlights(match: MatchEventSummary, matchData?: any
     const typeText = (d.type?.text || d.type?.type || '').toLowerCase();
     const clock = d.clock?.displayValue || (d.clock?.value ? `${Math.floor(d.clock.value / 60)}'` : '');
 
+    // Skip post-match penalty shootout kicks (period 5)
+    const periodNum = (d as any).period?.number ?? (d as any).play?.period?.number ?? (d as any).period;
+    const isShootout =
+      periodNum === 5 ||
+      typeText.includes('shootout') ||
+      lowerText.includes('penalty shootout') ||
+      lowerText.includes('shootout') ||
+      /\b\d+\s*\(\d+\)/.test(text);
+
+    if (isShootout) {
+      return;
+    }
+
     // Athletes Involved or participants extraction
     const rawAthletes: any[] =
       (d.athletesInvolved as any[]) ||
@@ -170,28 +183,36 @@ export function extractMatchHighlights(match: MatchEventSummary, matchData?: any
       }
     }
 
-    // 3. GOALS & ASSISTS
+    // 3. GOALS & ASSISTS & OWN GOALS
     const isGoal =
       d.scoringPlay === true ||
+      d.ownGoal === true ||
       typeText.includes('goal') ||
-      lowerText.includes('goal!') ||
-      lowerText.startsWith('goal');
+      typeText.includes('own') ||
+      lowerText.includes('goal') ||
+      lowerText.includes('own goal') ||
+      lowerText.includes('autogol');
 
     if (isGoal) {
-      const ownGoal = d.ownGoal === true || lowerText.includes('own goal') || typeText.includes('own goal');
+      const ownGoal = d.ownGoal === true || lowerText.includes('own goal') || typeText.includes('own goal') || lowerText.includes('autogol');
+
+      if (!primaryAthlete && ownGoal) {
+        const ogMatch = text.match(/(?:Own\s*Goal\s+by|Autogol\s+de|Gol\s+en\s+contra\s+de)\s+([A-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ\s.'-]+?)(?:\s*\(|,|\.|$)/i);
+        if (ogMatch) primaryAthlete = ogMatch[1].trim();
+      }
 
       if (!primaryAthlete) {
-        const scorerMatch = text.match(/Goal!.*?([A-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ\s.-]+?)(?:\s+\(| scored|\.|$)/);
+        const scorerMatch = text.match(/(?:Goal!|Goal\s+).*?([A-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ\s.-]+?)(?:\s+\(| scored|\.|$)/);
         if (scorerMatch) primaryAthlete = scorerMatch[1].trim();
       }
 
-      if (!secondaryAthlete && lowerText.includes('assisted by')) {
+      if (!secondaryAthlete && !ownGoal && lowerText.includes('assisted by')) {
         secondaryAthlete = extractAssistFromText(text);
       }
 
       goals.push({
         scorer: primaryAthlete || (ownGoal ? 'Own Goal' : 'Goal'),
-        assist: secondaryAthlete || null,
+        assist: ownGoal ? null : (secondaryAthlete || null),
         minute: clock,
         teamId: eventTeamId,
         isHomeTeam: isHome,

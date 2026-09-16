@@ -853,6 +853,7 @@ export const MOCK_MATCH_LIFECYCLE = [
     kickoff: new Date().toISOString(),
     status: { state: 'post', description: 'Full Time (PEN)', clock: "120+5'", period: 5 },
     score: { home: 1, away: 1 },
+    shootout: { home: 4, away: 2 },
     lineups: {
       home: MOCK_LINEUPS.home,
       away: MOCK_LINEUPS.away,
