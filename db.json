@@ -125,7 +125,7 @@
       "status": {
         "state": "in",
         "period": 2,
-        "clock": "80'",
+        "clock": "90'+3'",
         "description": "",
         "detail": "",
         "name": "STATUS_SECOND_HALF"
@@ -343,7 +343,7 @@
           "createdAt": "2026-09-16T13:37:56.322Z"
         }
       },
-      "lastUpdated": "2026-09-16T13:56:30.296Z",
+      "lastUpdated": "2026-09-16T14:09:11.384Z",
       "matchId": "401912654",
       "homeTeam": "Port FC",
       "awayTeam": "Vissel Kobe",
@@ -353,7 +353,7 @@
       },
       "lastStatus": "in",
       "lastPeriod": 2,
-      "lastClock": "80'",
+      "lastClock": "90'+3'",
       "eventStates": {
         "401912654:KICKOFF": {
           "eventId": "401912654:KICKOFF",
